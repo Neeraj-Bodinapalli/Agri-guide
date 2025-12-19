@@ -295,23 +295,34 @@ def predict_yield(state, district, season, crop, area):
         input_encoded = pd.get_dummies(input_data, columns=['State_Name', 'Season', 'Crop'], drop_first=False)
         
         # Ensure all feature columns from training are present
+        # Create a clean DataFrame to avoid fragmentation warnings
+        feature_dict = {}
         for col in yield_feature_columns:
-            if col not in input_encoded.columns:
-                input_encoded[col] = 0
+            if col in input_encoded.columns:
+                feature_dict[col] = input_encoded[col].iloc[0]
+            else:
+                feature_dict[col] = 0
         
-        # Reorder columns to match training exactly
-        input_encoded = input_encoded[yield_feature_columns]
+        # Create clean DataFrame with all required features
+        input_clean = pd.DataFrame([feature_dict])
         
-        # Scale Area feature (create a copy to avoid SettingWithCopyWarning)
-        area_value = input_encoded[['Area']].copy()
-        area_scaled = yield_scaler.transform(area_value)
-        input_encoded['Area'] = area_scaled
+        # Scale Area feature
+        if 'Area' in input_clean.columns:
+            area_scaled = yield_scaler.transform(input_clean[['Area']])
+            input_clean['Area'] = area_scaled.flatten()
         
         # Apply PCA transformation if available
         if yield_pca is not None:
-            input_features = yield_pca.transform(input_encoded.values)
+            try:
+                # Convert to numpy array and apply PCA
+                input_array = input_clean.values
+                input_features = yield_pca.transform(input_array)
+            except Exception as pca_error:
+                print(f"PCA transformation failed: {pca_error}")
+                # Fallback: use original features
+                input_features = input_clean.values
         else:
-            input_features = input_encoded.values
+            input_features = input_clean.values
         
         # Predict
         yield_prediction = yield_model.predict(input_features)[0]

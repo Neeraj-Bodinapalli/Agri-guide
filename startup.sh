@@ -6,6 +6,12 @@ echo "🌾 Starting Agri-Guide Deployment..."
 if [ ! -f "final_model/crop_recommendation_model.pkl" ] || [ ! -f "yield_model.pkl" ] || [ ! -f "crop_recommendation_model.pkl" ]; then
     echo "📦 Models not found. Training models..."
     echo "⏳ This may take 5-10 minutes on first deployment..."
+    
+    # Set memory-efficient Python settings
+    export PYTHONHASHSEED=0
+    export OMP_NUM_THREADS=1
+    
+    # Run normal training (optimized models should work fine now)
     python app.py
     
     if [ $? -eq 0 ]; then
@@ -19,7 +25,7 @@ else
 fi
 
 echo "🚀 Starting web application..."
-# Use gunicorn for production or flask for development
+# Use gunicorn for production
 if [ "$FLASK_ENV" = "development" ]; then
     python web_app.py
 else
