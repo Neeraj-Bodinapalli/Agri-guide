@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}Soil Health & Fertilizers - Agri-Guide{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="hero" style="margin-bottom: 2rem; padding: 2rem 0;">
+        <div class="hero-content">
+            <h1 style="font-size: 2.5rem;">Soil Health & Fertilizer Recommendations</h1>
+            <p>Get AI-powered soil analysis and precise fertilizer recommendations for optimal crop nutrition</p>
+        </div>
+    </div>
+
+    <div class="two-column">
+        <!-- Form Section -->
+        <div class="form-container">
+            <h2 style="color: var(--deep-green); margin-bottom: 1rem; font-size: 1.75rem;">
+                <i class="fas fa-clipboard-list"></i> Input Parameters
+            </h2>
+            
+            <form id="soilHealthForm">
+                <div class="form-group">
+                    <label class="form-label" for="nitrogen">
+                        <i class="fas fa-atom"></i> Nitrogen (N) - ppm
+                    </label>
+                    <div class="input-icon">
+                        <i class="fas fa-flask"></i>
+                        <input type="number" id="nitrogen" name="nitrogen" class="form-input" 
+                               placeholder="Enter N value (0-200)" min="0" max="200" step="0.1" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="phosphorous">
+                        <i class="fas fa-atom"></i> Phosphorous (P) - ppm
+                    </label>
+                    <div class="input-icon">
+                        <i class="fas fa-flask"></i>
+                        <input type="number" id="phosphorous" name="phosphorous" class="form-input" 
+                               placeholder="Enter P value (0-200)" min="0" max="200" step="0.1" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="potassium">
+                        <i class="fas fa-atom"></i> Potassium (K) - ppm
+                    </label>
+                    <div class="input-icon">
+                        <i class="fas fa-flask"></i>
+                        <input type="number" id="potassium" name="potassium" class="form-input" 
+                               placeholder="Enter K value (0-200)" min="0" max="200" step="0.1" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="temperature">
+                        <i class="fas fa-thermometer-half"></i> Temperature (°C)
+                    </label>
+                    <div class="input-icon">
+                        <i class="fas fa-temperature-high"></i>
+                        <input type="number" id="temperature" name="temperature" class="form-input" 
+                               placeholder="Enter temperature (0-50°C)" min="0" max="50" step="0.1" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="humidity">
+                        <i class="fas fa-tint"></i> Humidity (%)
+                    </label>
+                    <div class="input-icon">
+                        <i class="fas fa-water"></i>
+                        <input type="number" id="humidity" name="humidity" class="form-input" 
+                               placeholder="Enter humidity (0-100%)" min="0" max="100" step="0.1" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="cropType">
+                        <i class="fas fa-seedling"></i> Crop Type
+                    </label>
+                    <select id="cropType" name="cropType" class="form-select" required>
+                        <option value="">Select Crop Type</option>
+                        <option value="Maize">Maize</option>
+                        <option value="Sugarcane">Sugarcane</option>
+                        <option value="Cotton">Cotton</option>
+                        <option value="Tobacco">Tobacco</option>
+                        <option value="Paddy">Paddy</option>
+                        <option value="Barley">Barley</option>
+                        <option value="Wheat">Wheat</option>
+                        <option value="Millets">Millets</option>
+                        <option value="Oil seeds">Oil seeds</option>
+                        <option value="Pulses">Pulses</option>
+                        <option value="Ground Nuts">Ground Nuts</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="soilType">
+                        <i class="fas fa-mountain"></i> Soil Type
+                    </label>
+                    <select id="soilType" name="soilType" class="form-select" required>
+                        <option value="">Select Soil Type</option>
+                        <option value="Sandy">Sandy</option>
+                        <option value="Loamy">Loamy</option>
+                        <option value="Black">Black</option>
+                        <option value="Red">Red</option>
+                        <option value="Clayey">Clayey</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="moisture">
+                        <i class="fas fa-droplet"></i> Soil Moisture (%)
+                    </label>
+                    <div class="input-icon">
+                        <i class="fas fa-water"></i>
+                        <input type="number" id="moisture" name="moisture" class="form-input" 
+                               placeholder="Enter soil moisture (0-100%)" min="0" max="100" step="0.1" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary" id="analyzeBtn">
+                    <i class="fas fa-microscope"></i> Analyze & Recommend
+                </button>
+            </form>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsContainer" class="result-container hidden">
+            <div class="result-card">
+                <div class="fertilizer-image" id="fertilizerImage">
+                    <i class="fas fa-seedling"></i>
+                </div>
+                <h2 class="fertilizer-name" id="fertilizerName">-</h2>
+                
+
+
+                <div class="result-details">
+                    <div class="detail-item">
+                        <i class="fas fa-microscope"></i>
+                        <span class="detail-label">Fertilizer Type:</span>
+                        <span class="detail-value" id="fertilizerType">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="advice-card">
+                <h3><i class="fas fa-lightbulb"></i> Soil Health Analysis</h3>
+                <div class="advice-content" id="soilAdvice">
+                    <p>Analyzing soil conditions...</p>
+                </div>
+            </div>
+
+            <div class="guidelines-card">
+                <h3><i class="fas fa-clipboard-list"></i> Application Guidelines</h3>
+                <div class="guidelines-content">
+                    <div class="guideline-item">
+                        <i class="fas fa-clock"></i>
+                        <span>Apply fertilizer during early morning or late evening</span>
+                    </div>
+                    <div class="guideline-item">
+                        <i class="fas fa-tint"></i>
+                        <span>Ensure soil moisture is adequate before application</span>
+                    </div>
+                    <div class="guideline-item">
+                        <i class="fas fa-balance-scale"></i>
+                        <span>Follow manufacturer's recommended dosage</span>
+                    </div>
+                    <div class="guideline-item">
+                        <i class="fas fa-shower"></i>
+                        <span>Water the field after fertilizer application</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Placeholder when no results -->
+        <div id="placeholderContainer" class="result-container" style="display: flex; align-items: center; justify-content: center; min-height: 400px;">
+            <div style="text-align: center; color: var(--medium-gray);">
+                <i class="fas fa-microscope" style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                <p style="font-size: 1.1rem;">Fill in the form and click "Analyze & Recommend" to see predictions</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/soil_health.js') }}"></script>
+{% endblock %}
