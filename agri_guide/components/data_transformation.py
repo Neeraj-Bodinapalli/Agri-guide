@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.decomposition import PCA
 
 from agri_guide.exception import AgriGuideException
 from agri_guide.logging import logger
@@ -95,6 +96,7 @@ class RegressionTransformArtifacts:
     y_test: np.ndarray
     scaler: StandardScaler
     feature_columns: list[str]
+    pca: PCA
 
 
 class RegressionDataTransformer:
@@ -157,14 +159,30 @@ class RegressionDataTransformer:
             )
 
             feature_columns = list(X_encoded.columns)
+            
+            # Apply PCA to reduce dimensionality and memory usage
+            # Keep 95% of variance or max 50 components, whichever is smaller
+            n_features = X_train.shape[1]
+            max_components = min(50, n_features - 1)  # Leave room for variance
+            
+            logger.info(f"Original features: {n_features}, applying PCA with max {max_components} components")
+            
+            pca = PCA(n_components=max_components, random_state=42)
+            X_train_pca = pca.fit_transform(X_train)
+            X_test_pca = pca.transform(X_test)
+            
+            # Log explained variance
+            explained_variance = pca.explained_variance_ratio_.sum()
+            logger.info(f"PCA explained variance: {explained_variance:.4f} with {pca.n_components_} components")
 
             return RegressionTransformArtifacts(
-                X_train=X_train.values,
-                X_test=X_test.values,
+                X_train=X_train_pca,
+                X_test=X_test_pca,
                 y_train=y_train.values,
                 y_test=y_test.values,
                 scaler=scaler,
                 feature_columns=feature_columns,
+                pca=pca,
             )
         except Exception as exc:  # pragma: no cover - orchestration
             raise AgriGuideException("Failed to transform regression data", exc) from exc

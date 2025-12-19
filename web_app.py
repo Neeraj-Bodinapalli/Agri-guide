@@ -25,6 +25,7 @@ CROP_LABEL_ENCODER_PATH = MODEL_DIR / "label_encoder.pkl"
 YIELD_MODEL_PATH = MODEL_DIR / "yield_model.pkl"
 YIELD_SCALER_PATH = MODEL_DIR / "yield_scaler.pkl"
 YIELD_FEATURE_COLUMNS_PATH = MODEL_DIR / "yield_feature_columns.pkl"
+YIELD_PCA_PATH = MODEL_DIR / "final_model" / "yield_pca.pkl"
 
 # Fertilizer Prediction Models
 FERTILIZER_MODEL_PATH = MODEL_DIR / "final_model" / "fertilizer_model.pkl"
@@ -43,6 +44,7 @@ crop_label_encoder = None
 yield_model = None
 yield_scaler = None
 yield_feature_columns = None
+yield_pca = None
 
 # Fertilizer prediction models
 fertilizer_model = None
@@ -59,7 +61,7 @@ yield_crops: list[str] | None = None
 def load_models():
     """Load all ML models and preprocessors."""
     global crop_model, crop_scaler, crop_label_encoder
-    global yield_model, yield_scaler, yield_feature_columns
+    global yield_model, yield_scaler, yield_feature_columns, yield_pca
     global fertilizer_model, soil_encoder, crop_encoder, fertilizer_encoder
     
     try:
@@ -78,6 +80,15 @@ def load_models():
             yield_scaler = pickle.load(f)
         with open(YIELD_FEATURE_COLUMNS_PATH, 'rb') as f:
             yield_feature_columns = pickle.load(f)
+        
+        # Load PCA transformer (optional, for backward compatibility)
+        try:
+            with open(YIELD_PCA_PATH, 'rb') as f:
+                yield_pca = pickle.load(f)
+            print("✅ Loaded PCA transformer for yield prediction")
+        except FileNotFoundError:
+            yield_pca = None
+            print("⚠️ PCA transformer not found, using original features")
         
         # Load fertilizer prediction models
         with open(FERTILIZER_MODEL_PATH, 'rb') as f:
@@ -296,8 +307,14 @@ def predict_yield(state, district, season, crop, area):
         area_scaled = yield_scaler.transform(area_value)
         input_encoded['Area'] = area_scaled
         
+        # Apply PCA transformation if available
+        if yield_pca is not None:
+            input_features = yield_pca.transform(input_encoded.values)
+        else:
+            input_features = input_encoded.values
+        
         # Predict
-        yield_prediction = yield_model.predict(input_encoded)[0]
+        yield_prediction = yield_model.predict(input_features)[0]
         yield_per_hectare = float(yield_prediction)
         total_yield = yield_per_hectare * area
         

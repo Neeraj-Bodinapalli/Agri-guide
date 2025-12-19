@@ -50,10 +50,11 @@ class CropModelTrainer:
             nb_clf.fit(X_train_scaled, y_train)
 
             rf_clf = RandomForestClassifier(
-                n_estimators=200,
-                max_depth=None,
+                n_estimators=100,  # Reduced from 200 for memory efficiency
+                max_depth=20,      # Added depth limit for memory efficiency
                 random_state=42,
-                n_jobs=-1,
+                n_jobs=1,          # Reduced from -1 for memory efficiency
+                max_features='sqrt',  # Use sqrt of features for efficiency
             )
             rf_clf.fit(X_train_fe, y_train)
 
@@ -117,15 +118,18 @@ class YieldModelTrainer:
         y_test,
         scaler,
         feature_columns,
+        pca=None,
     ) -> YieldTrainingResult:
         try:
-            logger.info("Training RandomForestRegressor for yield prediction")
+            logger.info("Training memory-efficient RandomForestRegressor for yield prediction")
 
+            # Reduced trees for memory efficiency (from 300 to 50)
             rf_reg = RandomForestRegressor(
-                n_estimators=300,
-                max_depth=None,
+                n_estimators=50,  # Reduced from 300 to save memory
+                max_depth=15,     # Added depth limit for memory efficiency
                 random_state=42,
-                n_jobs=-1,
+                n_jobs=1,         # Reduced from -1 to save memory
+                max_features='sqrt',  # Use sqrt of features for efficiency
             )
             rf_reg.fit(X_train, y_train)
 
@@ -133,7 +137,9 @@ class YieldModelTrainer:
             r2 = r2_score(y_test, y_pred)
             mae = mean_absolute_error(y_test, y_pred)
 
-            logger.info("Yield RandomForestRegressor R2=%.4f, MAE=%.4f", r2, mae)
+            logger.info("Yield RandomForestRegressor (optimized) R2=%.4f, MAE=%.4f", r2, mae)
+            logger.info("Model uses %d trees with max_depth=%d for memory efficiency", 
+                       rf_reg.n_estimators, rf_reg.max_depth)
 
             out_dir: Path = self.config.final_model_dir
             out_dir.mkdir(parents=True, exist_ok=True)
@@ -141,10 +147,16 @@ class YieldModelTrainer:
             model_path = out_dir / self.config.model_name
             scaler_path = out_dir / self.config.scaler_name
             columns_path = out_dir / self.config.columns_name
+            pca_path = out_dir / "yield_pca.pkl"  # Save PCA transformer
 
             save_object(model_path, rf_reg)
             save_object(scaler_path, scaler)
             save_object(columns_path, feature_columns)
+            
+            # Save PCA if provided
+            if pca is not None:
+                save_object(pca_path, pca)
+                logger.info("Saved PCA transformer with %d components", pca.n_components_)
 
             artifact = YieldModelArtifact(
                 model_path=model_path,
