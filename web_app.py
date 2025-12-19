@@ -436,8 +436,14 @@ def api_predict_fertilizer():
 
 
 if __name__ == '__main__':
+    import os
+    
+    # Get port from environment (for deployment platforms)
+    port = int(os.environ.get('PORT', 5000))
+    debug = os.environ.get('FLASK_ENV') != 'production'
+    
     print("Loading ML models...")
     load_models()
     print("Starting Flask application...")
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=debug, host='0.0.0.0', port=port)
 
