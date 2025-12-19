@@ -107,8 +107,13 @@ def load_models():
             fertilizer_encoder = pickle.load(f)
         
         print("All models loaded successfully!")
+        print(f"✅ Crop model loaded: {crop_model is not None}")
+        print(f"✅ Yield model loaded: {yield_model is not None}")
+        print(f"✅ Fertilizer model loaded: {fertilizer_model is not None}")
     except Exception as e:
-        print(f"Error loading models: {e}")
+        print(f"❌ Error loading models: {e}")
+        import traceback
+        traceback.print_exc()
         raise
 
 
@@ -371,6 +376,11 @@ def api_predict_crop():
     """API endpoint for crop prediction."""
     try:
         data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'error': 'No JSON data provided'}), 400
+            
+        print(f"Received crop prediction request: {data}")
+        
         n = float(data.get('n', 0))
         p = float(data.get('p', 0))
         k = float(data.get('k', 0))
@@ -387,11 +397,19 @@ def api_predict_crop():
         if humidity < 0 or humidity > 100:
             return jsonify({'success': False, 'error': 'Humidity must be between 0 and 100'}), 400
         
+        # Check if models are loaded
+        if crop_model is None:
+            return jsonify({'success': False, 'error': 'Crop model not loaded'}), 500
+        
         result = predict_crop(n, p, k, temperature, humidity, ph, rainfall)
         return jsonify({'success': True, 'result': result})
     except ValueError as e:
+        print(f"ValueError in crop prediction: {e}")
         return jsonify({'success': False, 'error': f'Invalid input: {str(e)}'}), 400
     except Exception as e:
+        print(f"Exception in crop prediction: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 400
 
 
@@ -400,6 +418,11 @@ def api_predict_yield():
     """API endpoint for yield prediction."""
     try:
         data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'error': 'No JSON data provided'}), 400
+            
+        print(f"Received yield prediction request: {data}")
+        
         state = data.get('state', '').strip()
         district = data.get('district', '').strip()  # Not used in model but kept for API compatibility
         season = data.get('season', '').strip()
@@ -413,11 +436,19 @@ def api_predict_yield():
         if area <= 0:
             return jsonify({'success': False, 'error': 'Area must be greater than 0'}), 400
         
+        # Check if models are loaded
+        if yield_model is None:
+            return jsonify({'success': False, 'error': 'Yield model not loaded'}), 500
+        
         result = predict_yield(state, district, season, crop, area)
         return jsonify({'success': True, 'result': result})
     except ValueError as e:
+        print(f"ValueError in yield prediction: {e}")
         return jsonify({'success': False, 'error': f'Invalid input: {str(e)}'}), 400
     except Exception as e:
+        print(f"Exception in yield prediction: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 400
 
 
