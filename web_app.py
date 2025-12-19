@@ -62,12 +62,52 @@ yield_seasons: list[str] | None = None
 yield_crops: list[str] | None = None
 
 
+def check_model_files():
+    """Check if all required model files exist."""
+    required_files = {
+        'Crop Model': CROP_MODEL_PATH,
+        'Crop Scaler': CROP_SCALER_PATH,
+        'Crop Label Encoder': CROP_LABEL_ENCODER_PATH,
+        'Yield Model': YIELD_MODEL_PATH,
+        'Yield Scaler': YIELD_SCALER_PATH,
+        'Yield Feature Columns': YIELD_FEATURE_COLUMNS_PATH,
+        'Yield State Encoder': YIELD_STATE_ENCODER_PATH,
+        'Yield Season Encoder': YIELD_SEASON_ENCODER_PATH,
+        'Yield Crop Encoder': YIELD_CROP_ENCODER_PATH,
+        'Fertilizer Model': FERTILIZER_MODEL_PATH,
+        'Soil Encoder': SOIL_ENCODER_PATH,
+        'Crop Encoder (Fertilizer)': CROP_ENCODER_PATH,
+        'Fertilizer Encoder': FERTILIZER_ENCODER_PATH,
+    }
+    
+    print("🔍 Checking model files...")
+    missing_files = []
+    for name, path in required_files.items():
+        if path.exists():
+            size = path.stat().st_size / (1024*1024)  # Size in MB
+            print(f"✅ {name}: {path} ({size:.1f} MB)")
+        else:
+            print(f"❌ {name}: {path} (MISSING)")
+            missing_files.append(name)
+    
+    if missing_files:
+        print(f"⚠️ Missing {len(missing_files)} model files: {', '.join(missing_files)}")
+        return False
+    else:
+        print("✅ All model files found!")
+        return True
+
+
 def load_models():
     """Load all ML models and preprocessors."""
     global crop_model, crop_scaler, crop_label_encoder
     global yield_model, yield_scaler, yield_feature_columns
     global yield_state_encoder, yield_season_encoder, yield_crop_encoder
     global fertilizer_model, soil_encoder, crop_encoder, fertilizer_encoder
+    
+    # First check if files exist
+    if not check_model_files():
+        raise FileNotFoundError("Some required model files are missing!")
     
     try:
         # Load crop recommendation models
@@ -371,6 +411,37 @@ def soil_health():
     return render_template('soil_health.html')
 
 
+@app.route('/api/health')
+def api_health():
+    """Health check endpoint to verify model status."""
+    try:
+        model_status = {
+            'crop_model_loaded': crop_model is not None,
+            'yield_model_loaded': yield_model is not None,
+            'fertilizer_model_loaded': fertilizer_model is not None,
+            'crop_scaler_loaded': crop_scaler is not None,
+            'yield_encoders_loaded': all([
+                yield_state_encoder is not None,
+                yield_season_encoder is not None,
+                yield_crop_encoder is not None
+            ])
+        }
+        
+        all_loaded = all(model_status.values())
+        
+        return jsonify({
+            'success': True,
+            'all_models_loaded': all_loaded,
+            'model_status': model_status,
+            'message': 'All models loaded successfully' if all_loaded else 'Some models missing'
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
 @app.route('/api/predict-crop', methods=['POST'])
 def api_predict_crop():
     """API endpoint for crop prediction."""
@@ -485,6 +556,82 @@ def api_predict_fertilizer():
         return jsonify({'success': False, 'error': str(e)}), 400
 
 
+@app.route('/api/test')
+def api_test():
+    """Simple test endpoint to verify API is working."""
+    return jsonify({
+        'success': True,
+        'message': 'API is working!',
+        'timestamp': pd.Timestamp.now().isoformat()
+    })
+
+
+@app.route('/api/debug/files')
+def api_debug_files():
+    """Debug endpoint to list model files."""
+    import os
+    import subprocess
+    try:
+        cwd = os.getcwd()
+        final_model_path = Path(cwd) / "final_model"
+        
+        files_info = {
+            'current_directory': cwd,
+            'final_model_exists': final_model_path.exists(),
+            'final_model_path': str(final_model_path),
+            'files_in_final_model': [],
+            'file_sizes': {}
+        }
+        
+        if final_model_path.exists():
+            files_info['files_in_final_model'] = [
+                f.name for f in final_model_path.iterdir()
+            ]
+            
+            # Get file sizes
+            for f in final_model_path.iterdir():
+                if f.is_file():
+                    size_mb = f.stat().st_size / (1024 * 1024)
+                    files_info['file_sizes'][f.name] = f"{size_mb:.1f} MB"
+        
+        # Also check what's in the root directory
+        try:
+            root_files = [f.name for f in Path(cwd).iterdir() if f.is_file() and f.name.endswith('.pkl')]
+            files_info['root_pkl_files'] = root_files
+        except:
+            files_info['root_pkl_files'] = []
+        
+        return jsonify({
+            'success': True,
+            'info': files_info
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/debug/download/<filename>')
+def api_debug_download(filename):
+    """Debug endpoint to download model files."""
+    try:
+        file_path = Path("final_model") / filename
+        if file_path.exists() and file_path.suffix == '.pkl':
+            from flask import send_file
+            return send_file(file_path, as_attachment=True)
+        else:
+            return jsonify({
+                'success': False,
+                'error': f'File {filename} not found or not a .pkl file'
+            }), 404
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
 if __name__ == '__main__':
     import os
     
@@ -492,8 +639,20 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     debug = os.environ.get('FLASK_ENV') != 'production'
     
+    print(f"🔍 Current working directory: {os.getcwd()}")
+    print(f"🔍 MODEL_DIR: {MODEL_DIR}")
+    print(f"🔍 Looking for models in: {MODEL_DIR / 'final_model'}")
+    
     print("Loading ML models...")
-    load_models()
+    try:
+        load_models()
+        print("✅ All models loaded successfully!")
+    except Exception as e:
+        print(f"❌ Failed to load models: {e}")
+        import traceback
+        traceback.print_exc()
+        # Continue anyway to allow health check
+    
     print("Starting Flask application...")
     app.run(debug=debug, host='0.0.0.0', port=port)
 

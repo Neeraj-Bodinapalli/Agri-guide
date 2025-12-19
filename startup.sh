@@ -16,6 +16,14 @@ if [ ! -f "final_model/crop_recommendation_model.pkl" ] || [ ! -f "yield_model.p
     
     if [ $? -eq 0 ]; then
         echo "✅ Model training completed successfully!"
+        echo "📁 Checking created model files:"
+        if [ -d "final_model" ]; then
+            ls -la final_model/
+            echo "📊 Model file sizes:"
+            du -h final_model/*.pkl 2>/dev/null || echo "No .pkl files found"
+        else
+            echo "❌ final_model directory not found!"
+        fi
     else
         echo "❌ Model training failed!"
         exit 1
