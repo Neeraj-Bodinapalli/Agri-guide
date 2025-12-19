@@ -71,3 +71,10 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+
+# Large model files (>100MB)
+yield_model.pkl
+crop_recommendation_model.pkl
+
+# Model files (users should train their own)
+*.pkl
