@@ -632,6 +632,23 @@ def api_debug_download(filename):
         }), 500
 
 
+# Load models at module level (so Gunicorn can access them)
+print("🔍 Initializing Agri-Guide web application...")
+print(f"🔍 Current working directory: {Path.cwd()}")
+print(f"🔍 MODEL_DIR: {MODEL_DIR}")
+print(f"🔍 Looking for models in: {MODEL_DIR / 'final_model'}")
+
+print("📦 Loading ML models...")
+try:
+    load_models()
+    print("✅ All models loaded successfully!")
+except Exception as e:
+    print(f"❌ Failed to load models: {e}")
+    import traceback
+    traceback.print_exc()
+    # Continue anyway to allow health check and debugging
+
+
 if __name__ == '__main__':
     import os
     
@@ -639,20 +656,6 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     debug = os.environ.get('FLASK_ENV') != 'production'
     
-    print(f"🔍 Current working directory: {os.getcwd()}")
-    print(f"🔍 MODEL_DIR: {MODEL_DIR}")
-    print(f"🔍 Looking for models in: {MODEL_DIR / 'final_model'}")
-    
-    print("Loading ML models...")
-    try:
-        load_models()
-        print("✅ All models loaded successfully!")
-    except Exception as e:
-        print(f"❌ Failed to load models: {e}")
-        import traceback
-        traceback.print_exc()
-        # Continue anyway to allow health check
-    
-    print("Starting Flask application...")
+    print("Starting Flask development server...")
     app.run(debug=debug, host='0.0.0.0', port=port)
 
