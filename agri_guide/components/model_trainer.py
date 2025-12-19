@@ -118,7 +118,9 @@ class YieldModelTrainer:
         y_test,
         scaler,
         feature_columns,
-        pca=None,
+        state_encoder=None,
+        season_encoder=None,
+        crop_encoder=None,
     ) -> YieldTrainingResult:
         try:
             logger.info("Training memory-efficient RandomForestRegressor for yield prediction")
@@ -147,16 +149,24 @@ class YieldModelTrainer:
             model_path = out_dir / self.config.model_name
             scaler_path = out_dir / self.config.scaler_name
             columns_path = out_dir / self.config.columns_name
-            pca_path = out_dir / "yield_pca.pkl"  # Save PCA transformer
+            state_encoder_path = out_dir / "yield_state_encoder.pkl"
+            season_encoder_path = out_dir / "yield_season_encoder.pkl"
+            crop_encoder_path = out_dir / "yield_crop_encoder.pkl"
 
             save_object(model_path, rf_reg)
             save_object(scaler_path, scaler)
             save_object(columns_path, feature_columns)
             
-            # Save PCA if provided
-            if pca is not None:
-                save_object(pca_path, pca)
-                logger.info("Saved PCA transformer with %d components", pca.n_components_)
+            # Save label encoders
+            if state_encoder is not None:
+                save_object(state_encoder_path, state_encoder)
+                logger.info("Saved state encoder with %d classes", len(state_encoder.classes_))
+            if season_encoder is not None:
+                save_object(season_encoder_path, season_encoder)
+                logger.info("Saved season encoder with %d classes", len(season_encoder.classes_))
+            if crop_encoder is not None:
+                save_object(crop_encoder_path, crop_encoder)
+                logger.info("Saved crop encoder with %d classes", len(crop_encoder.classes_))
 
             artifact = YieldModelArtifact(
                 model_path=model_path,

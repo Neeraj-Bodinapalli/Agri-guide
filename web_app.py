@@ -17,15 +17,17 @@ app.config["SECRET_KEY"] = "agri-guide-secret-key-2024"
 MODEL_DIR = Path(__file__).parent
 
 # Crop Recommendation Models
-CROP_MODEL_PATH = MODEL_DIR / "crop_recommendation_model.pkl"
-CROP_SCALER_PATH = MODEL_DIR / "scaler.pkl"
-CROP_LABEL_ENCODER_PATH = MODEL_DIR / "label_encoder.pkl"
+CROP_MODEL_PATH = MODEL_DIR / "final_model" / "crop_recommendation_model.pkl"
+CROP_SCALER_PATH = MODEL_DIR / "final_model" / "scaler.pkl"
+CROP_LABEL_ENCODER_PATH = MODEL_DIR / "final_model" / "label_encoder.pkl"
 
 # Yield Prediction Models
-YIELD_MODEL_PATH = MODEL_DIR / "yield_model.pkl"
-YIELD_SCALER_PATH = MODEL_DIR / "yield_scaler.pkl"
-YIELD_FEATURE_COLUMNS_PATH = MODEL_DIR / "yield_feature_columns.pkl"
-YIELD_PCA_PATH = MODEL_DIR / "final_model" / "yield_pca.pkl"
+YIELD_MODEL_PATH = MODEL_DIR / "final_model" / "yield_model.pkl"
+YIELD_SCALER_PATH = MODEL_DIR / "final_model" / "yield_scaler.pkl"
+YIELD_FEATURE_COLUMNS_PATH = MODEL_DIR / "final_model" / "yield_feature_columns.pkl"
+YIELD_STATE_ENCODER_PATH = MODEL_DIR / "final_model" / "yield_state_encoder.pkl"
+YIELD_SEASON_ENCODER_PATH = MODEL_DIR / "final_model" / "yield_season_encoder.pkl"
+YIELD_CROP_ENCODER_PATH = MODEL_DIR / "final_model" / "yield_crop_encoder.pkl"
 
 # Fertilizer Prediction Models
 FERTILIZER_MODEL_PATH = MODEL_DIR / "final_model" / "fertilizer_model.pkl"
@@ -44,7 +46,9 @@ crop_label_encoder = None
 yield_model = None
 yield_scaler = None
 yield_feature_columns = None
-yield_pca = None
+yield_state_encoder = None
+yield_season_encoder = None
+yield_crop_encoder = None
 
 # Fertilizer prediction models
 fertilizer_model = None
@@ -61,7 +65,8 @@ yield_crops: list[str] | None = None
 def load_models():
     """Load all ML models and preprocessors."""
     global crop_model, crop_scaler, crop_label_encoder
-    global yield_model, yield_scaler, yield_feature_columns, yield_pca
+    global yield_model, yield_scaler, yield_feature_columns
+    global yield_state_encoder, yield_season_encoder, yield_crop_encoder
     global fertilizer_model, soil_encoder, crop_encoder, fertilizer_encoder
     
     try:
@@ -81,14 +86,15 @@ def load_models():
         with open(YIELD_FEATURE_COLUMNS_PATH, 'rb') as f:
             yield_feature_columns = pickle.load(f)
         
-        # Load PCA transformer (optional, for backward compatibility)
-        try:
-            with open(YIELD_PCA_PATH, 'rb') as f:
-                yield_pca = pickle.load(f)
-            print("✅ Loaded PCA transformer for yield prediction")
-        except FileNotFoundError:
-            yield_pca = None
-            print("⚠️ PCA transformer not found, using original features")
+        # Load label encoders for yield prediction
+        with open(YIELD_STATE_ENCODER_PATH, 'rb') as f:
+            yield_state_encoder = pickle.load(f)
+        with open(YIELD_SEASON_ENCODER_PATH, 'rb') as f:
+            yield_season_encoder = pickle.load(f)
+        with open(YIELD_CROP_ENCODER_PATH, 'rb') as f:
+            yield_crop_encoder = pickle.load(f)
+        
+        print("✅ Loaded label encoders for yield prediction")
         
         # Load fertilizer prediction models
         with open(FERTILIZER_MODEL_PATH, 'rb') as f:
@@ -283,46 +289,31 @@ def predict_fertilizer(temperature, humidity, moisture, soil_type, crop_type, ni
 def predict_yield(state, district, season, crop, area):
     """Predict crop yield based on location, season, crop type, and area."""
     try:
-        # Create input DataFrame with the same structure as training (no District_Name)
-        input_data = pd.DataFrame({
-            'State_Name': [state],
-            'Season': [season],
-            'Crop': [crop],
-            'Area': [area]
-        })
+        # Check if the input values are in the encoders' vocabulary
+        try:
+            state_encoded = yield_state_encoder.transform([state])[0]
+        except ValueError:
+            # If state not found, use the most common state (index 0)
+            state_encoded = 0
+            
+        try:
+            season_encoded = yield_season_encoder.transform([season])[0]
+        except ValueError:
+            # If season not found, use the most common season (index 0)
+            season_encoded = 0
+            
+        try:
+            crop_encoded = yield_crop_encoder.transform([crop])[0]
+        except ValueError:
+            # If crop not found, use the most common crop (index 0)
+            crop_encoded = 0
         
-        # One-hot encode categorical variables (matching training: State_Name, Season, Crop)
-        input_encoded = pd.get_dummies(input_data, columns=['State_Name', 'Season', 'Crop'], drop_first=False)
+        # Create input array with label encoded features
+        input_features = np.array([[state_encoded, season_encoded, crop_encoded, area]])
         
-        # Ensure all feature columns from training are present
-        # Create a clean DataFrame to avoid fragmentation warnings
-        feature_dict = {}
-        for col in yield_feature_columns:
-            if col in input_encoded.columns:
-                feature_dict[col] = input_encoded[col].iloc[0]
-            else:
-                feature_dict[col] = 0
-        
-        # Create clean DataFrame with all required features
-        input_clean = pd.DataFrame([feature_dict])
-        
-        # Scale Area feature
-        if 'Area' in input_clean.columns:
-            area_scaled = yield_scaler.transform(input_clean[['Area']])
-            input_clean['Area'] = area_scaled.flatten()
-        
-        # Apply PCA transformation if available
-        if yield_pca is not None:
-            try:
-                # Convert to numpy array and apply PCA
-                input_array = input_clean.values
-                input_features = yield_pca.transform(input_array)
-            except Exception as pca_error:
-                print(f"PCA transformation failed: {pca_error}")
-                # Fallback: use original features
-                input_features = input_clean.values
-        else:
-            input_features = input_clean.values
+        # Scale Area feature (it's the last column)
+        area_scaled = yield_scaler.transform([[area]])
+        input_features[0, 3] = area_scaled[0, 0]  # Replace area with scaled value
         
         # Predict
         yield_prediction = yield_model.predict(input_features)[0]

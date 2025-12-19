@@ -53,7 +53,9 @@ class TrainingPipeline:
             y_test=artifacts.y_test,
             scaler=artifacts.scaler,
             feature_columns=artifacts.feature_columns,
-            pca=artifacts.pca,  # Pass PCA transformer
+            state_encoder=artifacts.state_encoder,
+            season_encoder=artifacts.season_encoder,
+            crop_encoder=artifacts.crop_encoder,
         )
 
         logger.info("Module 2 training completed. R2=%.4f, MAE=%.4f", result.r2, result.mae)

@@ -96,7 +96,9 @@ class RegressionTransformArtifacts:
     y_test: np.ndarray
     scaler: StandardScaler
     feature_columns: list[str]
-    pca: PCA
+    state_encoder: LabelEncoder
+    season_encoder: LabelEncoder
+    crop_encoder: LabelEncoder
 
 
 class RegressionDataTransformer:
@@ -146,9 +148,19 @@ class RegressionDataTransformer:
             X = df_model.drop("Yield", axis=1)
             y = df_model["Yield"].copy()
 
-            categorical_cols = ["State_Name", "Season", "Crop"]
-            X_encoded = pd.get_dummies(X, columns=categorical_cols, drop_first=False)
+            # Use Label Encoding instead of One-Hot Encoding for memory efficiency
+            state_encoder = LabelEncoder()
+            season_encoder = LabelEncoder()
+            crop_encoder = LabelEncoder()
+            
+            X_encoded = X.copy()
+            X_encoded["State_Name"] = state_encoder.fit_transform(X["State_Name"])
+            X_encoded["Season"] = season_encoder.fit_transform(X["Season"])
+            X_encoded["Crop"] = crop_encoder.fit_transform(X["Crop"])
+            
+            logger.info(f"Label encoding: {len(state_encoder.classes_)} states, {len(season_encoder.classes_)} seasons, {len(crop_encoder.classes_)} crops")
 
+            # Scale Area feature
             scaler = StandardScaler()
             X_encoded["Area"] = scaler.fit_transform(X_encoded[["Area"]])
 
@@ -158,31 +170,20 @@ class RegressionDataTransformer:
                 X_encoded, y, test_size=0.2, random_state=42
             )
 
-            feature_columns = list(X_encoded.columns)
+            feature_columns = ["State_Name", "Season", "Crop", "Area"]
             
-            # Apply PCA to reduce dimensionality and memory usage
-            # Keep 95% of variance or max 50 components, whichever is smaller
-            n_features = X_train.shape[1]
-            max_components = min(50, n_features - 1)  # Leave room for variance
-            
-            logger.info(f"Original features: {n_features}, applying PCA with max {max_components} components")
-            
-            pca = PCA(n_components=max_components, random_state=42)
-            X_train_pca = pca.fit_transform(X_train)
-            X_test_pca = pca.transform(X_test)
-            
-            # Log explained variance
-            explained_variance = pca.explained_variance_ratio_.sum()
-            logger.info(f"PCA explained variance: {explained_variance:.4f} with {pca.n_components_} components")
+            logger.info(f"Final features: {len(feature_columns)} (much more memory efficient than one-hot encoding)")
 
             return RegressionTransformArtifacts(
-                X_train=X_train_pca,
-                X_test=X_test_pca,
+                X_train=X_train.values,
+                X_test=X_test.values,
                 y_train=y_train.values,
                 y_test=y_test.values,
                 scaler=scaler,
                 feature_columns=feature_columns,
-                pca=pca,
+                state_encoder=state_encoder,
+                season_encoder=season_encoder,
+                crop_encoder=crop_encoder,
             )
         except Exception as exc:  # pragma: no cover - orchestration
             raise AgriGuideException("Failed to transform regression data", exc) from exc
