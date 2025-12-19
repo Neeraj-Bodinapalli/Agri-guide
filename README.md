@@ -2,6 +2,8 @@
 
 An AI-powered agricultural intelligence platform that leverages Machine Learning to provide intelligent crop recommendations, accurate yield predictions, and personalized fertilizer recommendations for optimal farming outcomes.
 
+## Website link : https://agri-guide-2.onrender.com  
+
 ## 📋 Project Description / Overview
 
 Agri-Guide is a comprehensive precision farming solution that combines traditional agricultural knowledge with modern machine learning techniques. The system analyzes soil parameters, climate conditions, and crop characteristics to provide farmers with data-driven insights for maximizing productivity and sustainability. Built with a modular architecture, it offers three core prediction modules accessible through an intuitive web interface.
