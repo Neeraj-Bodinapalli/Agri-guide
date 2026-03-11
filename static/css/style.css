@@ -872,3 +872,51 @@ body::before {
         font-size: 1.5rem;
     }
 }
+
+/* Extra small-screen refinements (mobile-first tweaks) */
+@media (max-width: 600px) {
+    .main-content {
+        padding: var(--spacing-lg) 0;
+    }
+
+    .container {
+        padding: 0 var(--spacing-sm);
+    }
+
+    .hero {
+        padding: var(--spacing-lg) 0;
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .hero-content {
+        padding: var(--spacing-lg) var(--spacing-sm);
+    }
+
+    .hero h1 {
+        font-size: 1.8rem !important;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+
+    .hero p {
+        font-size: 1rem;
+    }
+
+    .form-container,
+    .result-container {
+        padding: var(--spacing-lg);
+        border-radius: 12px;
+    }
+
+    .result-card {
+        padding: var(--spacing-md);
+    }
+
+    .crop-name {
+        font-size: 1.8rem;
+    }
+
+    .stat-card {
+        padding: var(--spacing-lg);
+    }
+}

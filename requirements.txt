@@ -7,6 +7,11 @@ pyyaml
 flask
 gunicorn
 
+# Deep learning for crop disease detection
+torch
+torchvision
+pillow
+
 
 
 

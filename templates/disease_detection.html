@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Crop Disease Detection - Agri-Guide{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="hero" style="margin-bottom: 2rem; padding: 2rem 0;">
+        <div class="hero-content">
+            <h1 style="font-size: 2.5rem;">Crop Disease Detection</h1>
+            <p>Upload a leaf image or scan using your mobile camera to detect plant diseases with our deep learning model.</p>
+        </div>
+    </div>
+
+    <div class="two-column">
+        <!-- Image Input Section -->
+        <div class="form-container">
+            <h2 style="color: var(--deep-green); margin-bottom: 1rem; font-size: 1.75rem;">
+                <i class="fas fa-camera"></i> Leaf Image Input
+            </h2>
+
+            <p style="color: var(--medium-gray); font-size: 0.95rem; margin-bottom: 1rem;">
+                Choose an existing photo from your gallery or scan the leaf directly using your mobile camera. Supported formats: JPG, PNG, WEBP.
+            </p>
+
+            <div class="form-group">
+                <label class="form-label" for="leafImageInput">
+                    <i class="fas fa-upload"></i> Upload Leaf Image
+                </label>
+                <input
+                    type="file"
+                    id="leafImageInput"
+                    class="form-input"
+                    accept="image/*"
+                >
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="openCameraBtn">
+                    <i class="fas fa-mobile-alt"></i> Scan from Mobile Camera
+                </label>
+                <!-- Hidden file input that actually talks to the browser/camera -->
+                <input
+                    type="file"
+                    id="leafCameraInput"
+                    accept="image/*"
+                    capture="environment"
+                    style="display: none;"
+                >
+                <button
+                    type="button"
+                    id="openCameraBtn"
+                    class="btn-primary"
+                    style="width: 100%; margin-top: 0.25rem;"
+                >
+                    <i class="fas fa-camera"></i> Use Camera
+                </button>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">
+                    <i class="fas fa-image"></i> Preview
+                </label>
+                <div style="background: var(--off-white); border-radius: 12px; padding: 1rem; text-align: center; border: 1px solid var(--light-gray);">
+                    <img
+                        id="leafImagePreview"
+                        src=""
+                        alt="Leaf preview"
+                        style="max-width: 100%; max-height: 260px; border-radius: 8px; display: none; margin: 0 auto;"
+                    >
+                    <div id="leafPreviewPlaceholder" style="color: var(--medium-gray); font-size: 0.9rem;">
+                        <i class="fas fa-image" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.4;"></i>
+                        <p>No image selected yet.</p>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="btn-primary" id="detectDiseaseBtn">
+                <i class="fas fa-search"></i> Detect Disease
+            </button>
+
+            <p id="diseaseError" style="color: #dc3545; margin-top: 0.75rem; display: none;"></p>
+        </div>
+
+        <!-- Results Section -->
+        <div id="diseaseResultContainer" class="result-container hidden">
+            <div class="result-card">
+                <div class="crop-image" id="diseaseImagePlaceholder">
+                    <i class="fas fa-leaf"></i>
+                </div>
+                <h2 class="crop-name" id="diseaseName">-</h2>
+
+                <div class="confidence-container" style="margin-top: 1rem;">
+                    <div class="confidence-label">Model Confidence</div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" id="confidenceFill" style="width: 0%;">
+                            <span class="confidence-text" id="confidenceText">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="advice-section" id="treatmentSection">
+                    <h3>
+                        <i class="fas fa-prescription-bottle-alt"></i>
+                        Treatment Recommendations
+                    </h3>
+                    <ul id="treatmentList" style="margin-left: 1.25rem; margin-top: 0.5rem;">
+                    </ul>
+                </div>
+
+                <p id="lowConfidenceMessage" style="color: #dc3545; margin-top: 0.75rem; display: none;">
+                    <!-- Filled dynamically when the model is not confident -->
+                </p>
+            </div>
+        </div>
+
+        <!-- Placeholder when no results -->
+        <div id="diseasePlaceholderContainer" class="result-container" style="display: flex; align-items: center; justify-content: center; min-height: 400px;">
+            <div style="text-align: center; color: var(--medium-gray);">
+                <i class="fas fa-leaf" style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                <p style="font-size: 1.1rem;">Upload or scan a leaf image and click "Detect Disease" to see predictions and treatment advice.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/disease_detection.js') }}"></script>
+{% endblock %}
+

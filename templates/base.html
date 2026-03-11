@@ -31,6 +31,7 @@
                 <li><a href="{{ url_for('crop_recommendation') }}" class="nav-link {% if request.endpoint == 'crop_recommendation' %}active{% endif %}">Crop Recommendation</a></li>
                 <li><a href="{{ url_for('yield_prediction') }}" class="nav-link {% if request.endpoint == 'yield_prediction' %}active{% endif %}">Yield Prediction</a></li>
                 <li><a href="{{ url_for('soil_health') }}" class="nav-link {% if request.endpoint == 'soil_health' %}active{% endif %}">Soil Health</a></li>
+                <li><a href="{{ url_for('disease_detection') }}" class="nav-link {% if request.endpoint == 'disease_detection' %}active{% endif %}">Disease Detection</a></li>
             </ul>
             <div class="nav-toggle" id="mobile-menu">
                 <span class="bar"></span>

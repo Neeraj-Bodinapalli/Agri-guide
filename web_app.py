@@ -9,6 +9,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from flask import Flask, render_template, request, jsonify
+from PIL import Image
+
+from deep_learning.disease_predictor import predict_disease
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "agri-guide-secret-key-2024"
@@ -411,6 +414,12 @@ def soil_health():
     return render_template('soil_health.html')
 
 
+@app.route('/disease-detection')
+def disease_detection():
+    """Crop disease detection page (deep learning, image-based)."""
+    return render_template('disease_detection.html')
+
+
 @app.route('/api/health')
 def api_health():
     """Health check endpoint to verify model status."""
@@ -631,6 +640,50 @@ def api_debug_download(filename):
             'error': str(e)
         }), 500
 
+
+@app.route('/api/predict-disease', methods=['POST'])
+def api_predict_disease():
+    """API endpoint for crop disease detection using a pretrained deep learning model."""
+    try:
+        if 'image' not in request.files:
+            return jsonify({'success': False, 'error': 'No image file provided'}), 400
+
+        file = request.files['image']
+
+        if file.filename == '':
+            return jsonify({'success': False, 'error': 'No image file selected'}), 400
+
+        # Basic content-type / extension validation
+        allowed_mimetypes = {'image/jpeg', 'image/png', 'image/jpg', 'image/webp'}
+        if file.mimetype not in allowed_mimetypes:
+            return jsonify({'success': False, 'error': 'Unsupported file type. Please upload a JPG, PNG, or WEBP image.'}), 400
+
+        try:
+            image = Image.open(file.stream)
+        except Exception:
+            return jsonify({'success': False, 'error': 'Could not read image. Please upload a valid image file.'}), 400
+
+        result = predict_disease(image)
+
+        return jsonify({
+            'success': True,
+            'disease': result['display_name'],
+            'raw_label': result['label'],
+            'confidence': result['confidence'],
+            'confidence_percent': result['confidence_percent'],
+            'treatment': result['treatment'],
+            'is_confident': result.get('is_confident', True),
+            'confidence_threshold': result.get('confidence_threshold', 55.0),
+            'is_leaf': result.get('is_leaf', True),
+            'leaf_score': result.get('leaf_score', None),
+        })
+    except FileNotFoundError as e:
+        # Model file missing
+        return jsonify({'success': False, 'error': str(e)}), 500
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': f'Prediction failed: {str(e)}'}), 500
 
 # Load models at module level (so Gunicorn can access them)
 print("🔍 Initializing Agri-Guide web application...")

@@ -1,0 +1,99 @@
+{
+  "Tomato___Early_blight": [
+    "Apply copper-based fungicide or chlorothalonil according to label instructions.",
+    "Remove and destroy severely infected leaves to reduce inoculum.",
+    "Avoid overhead irrigation; water at the base of plants in the morning.",
+    "Rotate out of tomatoes and other solanaceous crops for at least 2–3 years."
+  ],
+  "Tomato___Late_blight": [
+    "Immediately remove and destroy infected plants to limit spread.",
+    "Apply systemic fungicides recommended for late blight (consult local extension).",
+    "Avoid working in fields when foliage is wet.",
+    "Do not save seed or tubers from infected plants."
+  ],
+  "Tomato___Leaf_Mold": [
+    "Improve air circulation by increasing plant spacing and pruning lower leaves.",
+    "Avoid overhead irrigation and high humidity in greenhouses.",
+    "Apply appropriate fungicides if disease pressure is high."
+  ],
+  "Tomato___Bacterial_spot": [
+    "Use certified disease-free seed and transplants for future crops.",
+    "Remove and destroy infected plant material.",
+    "Avoid overhead irrigation and work in fields when foliage is dry.",
+    "Apply copper-based bactericides if recommended locally."
+  ],
+  "Tomato___healthy": [
+    "Maintain balanced fertilization based on soil tests.",
+    "Water at the base of plants and avoid wetting foliage.",
+    "Scout regularly for early disease symptoms.",
+    "Rotate crops and remove crop residues after harvest."
+  ],
+  "Potato___Early_blight": [
+    "Remove and destroy infected foliage and crop debris.",
+    "Apply recommended protectant fungicides at early signs of disease.",
+    "Avoid water stress and maintain balanced nitrogen levels."
+  ],
+  "Potato___Late_blight": [
+    "Destroy infected plants promptly and avoid piling culls near fields.",
+    "Use protectant and systemic fungicides as per local guidelines.",
+    "Avoid overhead irrigation during cool, humid periods."
+  ],
+  "Potato___healthy": [
+    "Use certified seed potatoes and rotate fields.",
+    "Hill soil around plants to protect developing tubers.",
+    "Monitor regularly for early symptoms of foliar diseases."
+  ],
+  "Apple___Apple_scab": [
+    "Prune trees to improve air circulation and light penetration.",
+    "Remove and destroy fallen leaves and mummified fruit.",
+    "Apply fungicides at green tip through early fruit development if needed."
+  ],
+  "Apple___Black_rot": [
+    "Remove and destroy cankered branches and mummified fruit.",
+    "Maintain good pruning practices to reduce humidity inside the canopy.",
+    "Apply fungicides during primary infection periods if recommended locally."
+  ],
+  "Apple___healthy": [
+    "Prune annually to maintain an open canopy.",
+    "Sanitize orchard by removing fallen leaves and fruit.",
+    "Monitor for early disease symptoms and follow integrated pest management (IPM) guidelines."
+  ],
+  "Corn_(maize)___Common_rust_": [
+    "Plant resistant hybrids when available.",
+    "Monitor fields early; fungicides are rarely needed except under severe pressure.",
+    "Avoid excessive nitrogen that may favor lush, susceptible foliage."
+  ],
+  "Corn_(maize)___Northern_Leaf_Blight": [
+    "Use resistant hybrids suited to your region.",
+    "Rotate crops and manage corn residue to reduce inoculum.",
+    "Apply fungicides if recommended and economic thresholds are exceeded."
+  ],
+  "Corn_(maize)___healthy": [
+    "Rotate with non-host crops to reduce disease pressure.",
+    "Plant certified seed and recommended hybrids.",
+    "Scout regularly and maintain balanced fertility."
+  ],
+  "Grape___Black_rot": [
+    "Remove and destroy mummified fruit and infected shoots.",
+    "Prune to increase air movement and sunlight penetration.",
+    "Apply fungicides at key growth stages when conditions are wet and warm."
+  ],
+  "Grape___healthy": [
+    "Train and prune vines properly to promote airflow.",
+    "Remove old clusters and debris from the vineyard floor.",
+    "Use disease-resistant cultivars where possible."
+  ],
+  "Orange___Haunglongbing_(Citrus_greening)": [
+    "Consult local agricultural extension immediately; this disease is serious and regulated.",
+    "Control the Asian citrus psyllid vector using approved insecticides and biological controls.",
+    "Remove and destroy severely affected trees if recommended by authorities."
+  ],
+  "default": [
+    "Isolate and monitor the affected plant closely.",
+    "Remove heavily infected leaves or plant parts and dispose of them away from the field.",
+    "Avoid overhead irrigation; water at the base of the plant in the morning.",
+    "Ensure good air circulation and avoid overcrowding.",
+    "If disease persists or spreads, consult your local agricultural extension officer for region-specific fungicide or management recommendations."
+  ]
+}
+
