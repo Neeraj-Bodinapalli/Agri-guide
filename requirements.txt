@@ -28,3 +28,5 @@ sentence-transformers
 huggingface_hub
 
 openai
+
+langchain_huggingface
