@@ -12,6 +12,7 @@ from flask import Flask, render_template, request, jsonify
 from PIL import Image
 
 from deep_learning.disease_predictor import predict_disease
+from chatbot.chat_service import chat as chatbot_chat
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "agri-guide-secret-key-2024"
@@ -573,6 +574,31 @@ def api_test():
         'message': 'API is working!',
         'timestamp': pd.Timestamp.now().isoformat()
     })
+
+
+@app.route('/api/chat', methods=['POST'])
+def chat_endpoint():
+    """RAG chatbot API endpoint."""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+
+        message = data.get('message', '').strip()
+        session_id = data.get('session_id', 'default')
+        context = data.get('context', None)
+
+        if not message:
+            return jsonify({"error": "Message is required"}), 400
+
+        if len(message) > 500:
+            return jsonify({"error": "Message too long"}), 400
+
+        # Delegate to RAG chatbot backend (do not modify implementation there)
+        result = chatbot_chat(message, session_id, context)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route('/api/debug/files')

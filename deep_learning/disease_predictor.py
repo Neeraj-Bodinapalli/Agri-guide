@@ -19,7 +19,7 @@ _DEVICE = torch.device("cpu")
 def _get_model_path() -> Path:
     """Return the path to the pretrained plant disease model."""
     base_dir = Path(__file__).resolve().parent.parent
-    return base_dir / "DeepLearningModels" / "plant_disease_model.pth"
+    return base_dir / "DeepLearningModels" / "plant_disease_model_final.pth"
 
 
 def load_model() -> torch.nn.Module:
@@ -37,15 +37,19 @@ def load_model() -> torch.nn.Module:
     if not model_path.exists():
         raise FileNotFoundError(
             f"Plant disease model file not found at {model_path}. "
-            "Please place 'plant_disease_model.pth' in the 'DeepLearningModels' folder."
+            "Please place 'plant_disease_model_final.pth' in the 'DeepLearningModels' folder."
         )
 
     # Initialize EfficientNet-B0 architecture with the correct number of classes (38),
     # matching the classifier head used during training.
     model = efficientnet_b0(weights=None, num_classes=len(CLASS_LABELS))
 
-    # Load state dict on CPU
-    state_dict = torch.load(model_path, map_location=_DEVICE)
+    # Load checkpoint (may be full checkpoint or raw state_dict)
+    checkpoint = torch.load(model_path, map_location=_DEVICE)
+    if isinstance(checkpoint, dict) and "model_state_dict" in checkpoint:
+        state_dict = checkpoint["model_state_dict"]
+    else:
+        state_dict = checkpoint
     model.load_state_dict(state_dict)
 
     model.eval()
@@ -59,23 +63,20 @@ def preprocess_image(image: Image.Image) -> torch.Tensor:
     """
     Preprocess a PIL image for EfficientNet-B0 inference.
 
-    Steps:
-    - Convert to RGB
-    - Resize to 224x224
-    - Convert to tensor
-    - Normalize using ImageNet statistics
+    Must match the inference_transforms used in training (e.g. agri_guide.ipynb):
+    Resize(256) -> CenterCrop(224) -> ToTensor() -> ImageNet Normalize.
     """
-    # IMPORTANT: match training transforms from the notebook
-    # (Resize -> ToTensor, NO normalization).
     transform = transforms.Compose([
-        transforms.Resize((224, 224)),
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
         transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
 
     if image.mode != "RGB":
         image = image.convert("RGB")
 
-    tensor = transform(image).unsqueeze(0)  # Add batch dimension
+    tensor = transform(image).unsqueeze(0)
     return tensor.to(_DEVICE)
 
 

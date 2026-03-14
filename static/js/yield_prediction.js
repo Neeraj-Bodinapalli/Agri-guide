@@ -117,6 +117,19 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('yieldPerHectare').textContent = 
             `${yieldPerHectare.toFixed(2)} Tonnes per Hectare (for ${area} hectares)`;
 
+        // Inject context for chatbot
+        try {
+            const cropSelect = document.getElementById('crop');
+            const cropName = cropSelect ? cropSelect.value : '';
+            window.chatContext = {
+                feature: "yield_prediction",
+                crop: cropName,
+                yield: yieldPerHectare
+            };
+        } catch (e) {
+            // Ignore context errors
+        }
+
         // Reset revenue calculator
         document.getElementById('marketPrice').value = '';
         const revenueResult = document.getElementById('revenueResult');

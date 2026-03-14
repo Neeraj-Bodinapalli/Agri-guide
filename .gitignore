@@ -78,3 +78,9 @@ crop_recommendation_model.pkl
 
 # Model files (users should train their own)
 *.pkl
+*.pt
+*.pth
+*.bin
+*.h5
+models/
+checkpoints/

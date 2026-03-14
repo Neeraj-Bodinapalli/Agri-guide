@@ -94,6 +94,17 @@ document.addEventListener('DOMContentLoaded', function() {
             fertilizerImage.innerHTML = '<i class="fas fa-seedling"></i>';
         }
 
+        // Inject context for chatbot (soil health focus)
+        try {
+            window.chatContext = {
+                feature: "soil_health",
+                recommendation: result.soil_advice,
+                fertilizer: result.fertilizer
+            };
+        } catch (e) {
+            // Ignore context errors
+        }
+
         // Show results with animation
         resultsContainer.classList.remove('hidden');
         resultsContainer.scrollIntoView({ behavior: 'smooth' });

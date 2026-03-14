@@ -16,8 +16,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const diseaseImagePlaceholder = document.getElementById('diseaseImagePlaceholder');
     const confidenceFill = document.getElementById('confidenceFill');
     const confidenceText = document.getElementById('confidenceText');
-    const treatmentList = document.getElementById('treatmentList');
-    const treatmentSection = document.getElementById('treatmentSection');
     const lowConfidenceMessage = document.getElementById('lowConfidenceMessage');
 
     let selectedFile = null;
@@ -143,69 +141,54 @@ document.addEventListener('DOMContentLoaded', function () {
             // If the image does not look like a leaf at all, short-circuit:
             if (!isLeaf) {
                 clamped = 0;
-                if (confidenceFill) {
-                    confidenceFill.style.width = '0%';
-                }
-                if (confidenceText) {
-                    confidenceText.textContent = '0.0%';
-                }
-                if (diseaseImagePlaceholder) {
-                    diseaseImagePlaceholder.style.display = 'none';
-                }
-                if (treatmentSection) {
-                    treatmentSection.style.display = 'none';
-                }
-                if (diseaseNameEl) {
-                    diseaseNameEl.textContent = 'No leaf detected';
-                }
+                if (confidenceFill) confidenceFill.style.width = '0%';
+                if (confidenceText) confidenceText.textContent = '0.0%';
+                if (diseaseImagePlaceholder) diseaseImagePlaceholder.style.display = 'none';
+                if (diseaseNameEl) diseaseNameEl.textContent = 'No leaf detected';
                 if (lowConfidenceMessage) {
                     lowConfidenceMessage.textContent =
                         'This image does not appear to be a close-up of a plant leaf. ' +
                         'Please upload or scan a single leaf in good lighting against a simple background.';
                     lowConfidenceMessage.style.display = 'block';
                 }
-                if (treatmentList) {
-                    treatmentList.innerHTML = '';
-                }
                 return;
             }
 
-            // High-confidence path for valid leaf images: show disease and treatments
             const isHighConfidence = clamped >= threshold;
 
             if (diseaseImagePlaceholder) {
                 diseaseImagePlaceholder.style.display = isHighConfidence ? 'flex' : 'none';
             }
-            if (treatmentSection) {
-                treatmentSection.style.display = isHighConfidence ? 'block' : 'none';
-            }
             if (diseaseNameEl) {
-                if (isHighConfidence) {
-                    diseaseNameEl.textContent = data.disease || 'Unknown disease';
-                } else {
-                    diseaseNameEl.textContent = 'Prediction not reliable';
-                }
+                diseaseNameEl.textContent = isHighConfidence
+                    ? (data.disease || 'Unknown disease')
+                    : 'Prediction not reliable';
             }
 
-            // If below threshold, show a clear warning message in the result card
             if (!isHighConfidence && lowConfidenceMessage) {
                 lowConfidenceMessage.textContent =
                     `The model is not very confident in this image (${clamped.toFixed(1)}%). ` +
                     `Please retake a clearer photo focusing on a single leaf in good lighting, or consult an expert.`;
                 lowConfidenceMessage.style.display = 'block';
+            } else if (lowConfidenceMessage) {
+                lowConfidenceMessage.style.display = 'none';
             }
 
-            if (treatmentList) {
-                treatmentList.innerHTML = '';
-                if (isHighConfidence && Array.isArray(data.treatment) && data.treatment.length > 0) {
-                    data.treatment.forEach((tip) => {
-                        const li = document.createElement('li');
-                        li.textContent = tip;
-                        treatmentList.appendChild(li);
-                    });
-                } else {
-                    // For low confidence we do not show any treatment list
+            // Inject context for chatbot
+            try {
+                let confidenceValue = 0;
+                if (typeof data.confidence === 'number') {
+                    confidenceValue = data.confidence;
+                } else if (typeof data.confidence_percent === 'number') {
+                    confidenceValue = data.confidence_percent / 100.0;
                 }
+                window.chatContext = {
+                    feature: "disease_detection",
+                    disease: data.disease || data.display_name || '',
+                    confidence: confidenceValue
+                };
+            } catch (e) {
+                // Ignore context errors
             }
         } catch (err) {
             console.error('Disease prediction error:', err);

@@ -12,6 +12,16 @@ torch
 torchvision
 pillow
 
+langchain
 
+langchain-community
+faiss-cpu
 
+pypdf
+python-dotenv
+
+google-genai
+langchain-google-genai>=2.0.0
+
+sentence-transformers
 

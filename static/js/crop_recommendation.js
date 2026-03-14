@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const placeholderContainer = document.getElementById('placeholderContainer');
     const predictYieldBtn = document.getElementById('predictYieldBtn');
     const getSoilHealthBtn = document.getElementById('getSoilHealthBtn');
+    const askChatbotBtn = document.getElementById('askChatbotBtn');
 
     let currentCropName = null;
     let currentFormData = null;
@@ -131,12 +132,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function showLoadingState() {
         document.getElementById('cropName').textContent = 'Analyzing...';
-        if (predictYieldBtn) {
-            predictYieldBtn.disabled = true;
-        }
-        if (getSoilHealthBtn) {
-            getSoilHealthBtn.disabled = true;
-        }
+        if (predictYieldBtn) predictYieldBtn.disabled = true;
+        if (getSoilHealthBtn) getSoilHealthBtn.disabled = true;
+        if (askChatbotBtn) askChatbotBtn.disabled = true;
     }
 
     function displayResults(result) {
@@ -153,27 +151,31 @@ document.addEventListener('DOMContentLoaded', function() {
         const icon = cropIcons[cropLower] || '🌱';
         cropImage.innerHTML = `<span style="font-size: 4rem;">${icon}</span>`;
 
+        // Inject context for chatbot
+        try {
+            window.chatContext = {
+                feature: "crop_recommendation",
+                crop: cropName
+            };
+        } catch (e) {
+            // Ignore context errors
+        }
+
         // Animate result appearance
         resultsContainer.classList.add('fade-in');
 
         // Enable buttons
-        if (predictYieldBtn) {
-            predictYieldBtn.disabled = false;
-        }
-        if (getSoilHealthBtn) {
-            getSoilHealthBtn.disabled = false;
-        }
+        if (predictYieldBtn) predictYieldBtn.disabled = false;
+        if (getSoilHealthBtn) getSoilHealthBtn.disabled = false;
+        if (askChatbotBtn) askChatbotBtn.disabled = false;
     }
 
     function showError(message) {
         document.getElementById('cropName').textContent = 'Error';
         document.getElementById('cropImage').innerHTML = '<i class="fas fa-exclamation-triangle" style="color: #dc3545;"></i>';
-        if (predictYieldBtn) {
-            predictYieldBtn.disabled = true;
-        }
-        if (getSoilHealthBtn) {
-            getSoilHealthBtn.disabled = true;
-        }
+        if (predictYieldBtn) predictYieldBtn.disabled = true;
+        if (getSoilHealthBtn) getSoilHealthBtn.disabled = true;
+        if (askChatbotBtn) askChatbotBtn.disabled = true;
     }
 
     // Predict Yield button -> redirect to yield prediction page with preselected crop
