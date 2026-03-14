@@ -10,9 +10,12 @@ import numpy as np
 import pandas as pd
 from flask import Flask, render_template, request, jsonify
 from PIL import Image
+from huggingface_hub import hf_hub_download
 
 from deep_learning.disease_predictor import predict_disease
 from chatbot.chat_service import chat as chatbot_chat
+
+HF_REPO_ID = "neerajbodinapalli/agri-guide-models"
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "agri-guide-secret-key-2024"
@@ -43,6 +46,24 @@ FERTILIZER_ENCODER_PATH = MODEL_DIR / "final_model" / "fertilizer_encoder.pkl"
 RAW_DATA_DIR = MODEL_DIR / "raw_data"
 YIELD_DATA_PATH = RAW_DATA_DIR / "crop_production.csv"
 
+# Filenames of models and preprocessors stored on Hugging Face Hub
+# (paths are relative to the root of the HF model repo)
+CROP_MODEL_FILENAME = "final_model/crop_recommendation_model.pkl"
+CROP_SCALER_FILENAME = "final_model/scaler.pkl"
+CROP_LABEL_ENCODER_FILENAME = "final_model/label_encoder.pkl"
+
+YIELD_MODEL_FILENAME = "final_model/yield_model.pkl"
+YIELD_SCALER_FILENAME = "final_model/yield_scaler.pkl"
+YIELD_FEATURE_COLUMNS_FILENAME = "final_model/yield_feature_columns.pkl"
+YIELD_STATE_ENCODER_FILENAME = "final_model/yield_state_encoder.pkl"
+YIELD_SEASON_ENCODER_FILENAME = "final_model/yield_season_encoder.pkl"
+YIELD_CROP_ENCODER_FILENAME = "final_model/yield_crop_encoder.pkl"
+
+FERTILIZER_MODEL_FILENAME = "final_model/fertilizer_model.pkl"
+SOIL_ENCODER_FILENAME = "final_model/soil_encoder.pkl"
+CROP_ENCODER_FILENAME = "final_model/crop_encoder.pkl"
+FERTILIZER_ENCODER_FILENAME = "final_model/fertilizer_encoder.pkl"
+
 # Global model variables
 crop_model = None
 crop_scaler = None
@@ -65,97 +86,71 @@ yield_states: list[str] | None = None
 yield_seasons: list[str] | None = None
 yield_crops: list[str] | None = None
 
-
-def check_model_files():
-    """Check if all required model files exist."""
-    required_files = {
-        'Crop Model': CROP_MODEL_PATH,
-        'Crop Scaler': CROP_SCALER_PATH,
-        'Crop Label Encoder': CROP_LABEL_ENCODER_PATH,
-        'Yield Model': YIELD_MODEL_PATH,
-        'Yield Scaler': YIELD_SCALER_PATH,
-        'Yield Feature Columns': YIELD_FEATURE_COLUMNS_PATH,
-        'Yield State Encoder': YIELD_STATE_ENCODER_PATH,
-        'Yield Season Encoder': YIELD_SEASON_ENCODER_PATH,
-        'Yield Crop Encoder': YIELD_CROP_ENCODER_PATH,
-        'Fertilizer Model': FERTILIZER_MODEL_PATH,
-        'Soil Encoder': SOIL_ENCODER_PATH,
-        'Crop Encoder (Fertilizer)': CROP_ENCODER_PATH,
-        'Fertilizer Encoder': FERTILIZER_ENCODER_PATH,
-    }
-    
-    print("🔍 Checking model files...")
-    missing_files = []
-    for name, path in required_files.items():
-        if path.exists():
-            size = path.stat().st_size / (1024*1024)  # Size in MB
-            print(f"✅ {name}: {path} ({size:.1f} MB)")
-        else:
-            print(f"❌ {name}: {path} (MISSING)")
-            missing_files.append(name)
-    
-    if missing_files:
-        print(f"⚠️ Missing {len(missing_files)} model files: {', '.join(missing_files)}")
-        return False
-    else:
-        print("✅ All model files found!")
-        return True
-
-
 def load_models():
-    """Load all ML models and preprocessors."""
+    """Load all ML models and preprocessors from Hugging Face Hub."""
     global crop_model, crop_scaler, crop_label_encoder
     global yield_model, yield_scaler, yield_feature_columns
     global yield_state_encoder, yield_season_encoder, yield_crop_encoder
     global fertilizer_model, soil_encoder, crop_encoder, fertilizer_encoder
     
-    # First check if files exist
-    if not check_model_files():
-        raise FileNotFoundError("Some required model files are missing!")
-    
     try:
+        # Download model artifacts from Hugging Face Hub (cached after first download)
+        crop_model_path = hf_hub_download(repo_id=HF_REPO_ID, filename=CROP_MODEL_FILENAME)
+        crop_scaler_path = hf_hub_download(repo_id=HF_REPO_ID, filename=CROP_SCALER_FILENAME)
+        crop_label_encoder_path = hf_hub_download(repo_id=HF_REPO_ID, filename=CROP_LABEL_ENCODER_FILENAME)
+
+        yield_model_path = hf_hub_download(repo_id=HF_REPO_ID, filename=YIELD_MODEL_FILENAME)
+        yield_scaler_path = hf_hub_download(repo_id=HF_REPO_ID, filename=YIELD_SCALER_FILENAME)
+        yield_feature_columns_path = hf_hub_download(repo_id=HF_REPO_ID, filename=YIELD_FEATURE_COLUMNS_FILENAME)
+        yield_state_encoder_path = hf_hub_download(repo_id=HF_REPO_ID, filename=YIELD_STATE_ENCODER_FILENAME)
+        yield_season_encoder_path = hf_hub_download(repo_id=HF_REPO_ID, filename=YIELD_SEASON_ENCODER_FILENAME)
+        yield_crop_encoder_path = hf_hub_download(repo_id=HF_REPO_ID, filename=YIELD_CROP_ENCODER_FILENAME)
+
+        fertilizer_model_path = hf_hub_download(repo_id=HF_REPO_ID, filename=FERTILIZER_MODEL_FILENAME)
+        soil_encoder_path = hf_hub_download(repo_id=HF_REPO_ID, filename=SOIL_ENCODER_FILENAME)
+        crop_encoder_path = hf_hub_download(repo_id=HF_REPO_ID, filename=CROP_ENCODER_FILENAME)
+        fertilizer_encoder_path = hf_hub_download(repo_id=HF_REPO_ID, filename=FERTILIZER_ENCODER_FILENAME)
+
         # Load crop recommendation models
-        with open(CROP_MODEL_PATH, 'rb') as f:
+        with open(crop_model_path, 'rb') as f:
             crop_model = pickle.load(f)
-        with open(CROP_SCALER_PATH, 'rb') as f:
+        with open(crop_scaler_path, 'rb') as f:
             crop_scaler = pickle.load(f)
-        with open(CROP_LABEL_ENCODER_PATH, 'rb') as f:
+        with open(crop_label_encoder_path, 'rb') as f:
             crop_label_encoder = pickle.load(f)
-        
+
         # Load yield prediction models
-        with open(YIELD_MODEL_PATH, 'rb') as f:
+        with open(yield_model_path, 'rb') as f:
             yield_model = pickle.load(f)
-        with open(YIELD_SCALER_PATH, 'rb') as f:
+        with open(yield_scaler_path, 'rb') as f:
             yield_scaler = pickle.load(f)
-        with open(YIELD_FEATURE_COLUMNS_PATH, 'rb') as f:
+        with open(yield_feature_columns_path, 'rb') as f:
             yield_feature_columns = pickle.load(f)
-        
+
         # Load label encoders for yield prediction
-        with open(YIELD_STATE_ENCODER_PATH, 'rb') as f:
+        with open(yield_state_encoder_path, 'rb') as f:
             yield_state_encoder = pickle.load(f)
-        with open(YIELD_SEASON_ENCODER_PATH, 'rb') as f:
+        with open(yield_season_encoder_path, 'rb') as f:
             yield_season_encoder = pickle.load(f)
-        with open(YIELD_CROP_ENCODER_PATH, 'rb') as f:
+        with open(yield_crop_encoder_path, 'rb') as f:
             yield_crop_encoder = pickle.load(f)
-        
-        print("✅ Loaded label encoders for yield prediction")
-        
+
         # Load fertilizer prediction models
-        with open(FERTILIZER_MODEL_PATH, 'rb') as f:
+        with open(fertilizer_model_path, 'rb') as f:
             fertilizer_model = pickle.load(f)
-        with open(SOIL_ENCODER_PATH, 'rb') as f:
+        with open(soil_encoder_path, 'rb') as f:
             soil_encoder = pickle.load(f)
-        with open(CROP_ENCODER_PATH, 'rb') as f:
+        with open(crop_encoder_path, 'rb') as f:
             crop_encoder = pickle.load(f)
-        with open(FERTILIZER_ENCODER_PATH, 'rb') as f:
+        with open(fertilizer_encoder_path, 'rb') as f:
             fertilizer_encoder = pickle.load(f)
-        
-        print("All models loaded successfully!")
+
+        print("All models loaded successfully from Hugging Face Hub!")
         print(f"✅ Crop model loaded: {crop_model is not None}")
         print(f"✅ Yield model loaded: {yield_model is not None}")
         print(f"✅ Fertilizer model loaded: {fertilizer_model is not None}")
     except Exception as e:
-        print(f"❌ Error loading models: {e}")
+        print(f"❌ Error loading models from Hub: {e}")
         import traceback
         traceback.print_exc()
         raise
@@ -601,72 +596,6 @@ def chat_endpoint():
         return jsonify({"error": str(e)}), 500
 
 
-@app.route('/api/debug/files')
-def api_debug_files():
-    """Debug endpoint to list model files."""
-    import os
-    import subprocess
-    try:
-        cwd = os.getcwd()
-        final_model_path = Path(cwd) / "final_model"
-        
-        files_info = {
-            'current_directory': cwd,
-            'final_model_exists': final_model_path.exists(),
-            'final_model_path': str(final_model_path),
-            'files_in_final_model': [],
-            'file_sizes': {}
-        }
-        
-        if final_model_path.exists():
-            files_info['files_in_final_model'] = [
-                f.name for f in final_model_path.iterdir()
-            ]
-            
-            # Get file sizes
-            for f in final_model_path.iterdir():
-                if f.is_file():
-                    size_mb = f.stat().st_size / (1024 * 1024)
-                    files_info['file_sizes'][f.name] = f"{size_mb:.1f} MB"
-        
-        # Also check what's in the root directory
-        try:
-            root_files = [f.name for f in Path(cwd).iterdir() if f.is_file() and f.name.endswith('.pkl')]
-            files_info['root_pkl_files'] = root_files
-        except:
-            files_info['root_pkl_files'] = []
-        
-        return jsonify({
-            'success': True,
-            'info': files_info
-        })
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-
-@app.route('/api/debug/download/<filename>')
-def api_debug_download(filename):
-    """Debug endpoint to download model files."""
-    try:
-        file_path = Path("final_model") / filename
-        if file_path.exists() and file_path.suffix == '.pkl':
-            from flask import send_file
-            return send_file(file_path, as_attachment=True)
-        else:
-            return jsonify({
-                'success': False,
-                'error': f'File {filename} not found or not a .pkl file'
-            }), 404
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-
 @app.route('/api/predict-disease', methods=['POST'])
 def api_predict_disease():
     """API endpoint for crop disease detection using a pretrained deep learning model."""
@@ -715,9 +644,9 @@ def api_predict_disease():
 print("🔍 Initializing Agri-Guide web application...")
 print(f"🔍 Current working directory: {Path.cwd()}")
 print(f"🔍 MODEL_DIR: {MODEL_DIR}")
-print(f"🔍 Looking for models in: {MODEL_DIR / 'final_model'}")
+print(f"🔍 Using Hugging Face repo: {HF_REPO_ID}")
 
-print("📦 Loading ML models...")
+print("📦 Loading ML models from Hugging Face Hub...")
 try:
     load_models()
     print("✅ All models loaded successfully!")

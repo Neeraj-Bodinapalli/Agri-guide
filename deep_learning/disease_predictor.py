@@ -8,18 +8,24 @@ import torch
 from PIL import Image
 from torchvision import transforms
 from torchvision.models import efficientnet_b0
+from huggingface_hub import hf_hub_download
 
 from .class_labels import CLASS_LABELS
 
 
 _MODEL: torch.nn.Module | None = None
 _DEVICE = torch.device("cpu")
+HF_REPO_ID = "neerajbodinapalli/agri-guide-models"
+PLANT_DISEASE_MODEL_FILENAME = "DeepLearningModels/plant_disease_model_final.pth"
 
 
 def _get_model_path() -> Path:
-    """Return the path to the pretrained plant disease model."""
-    base_dir = Path(__file__).resolve().parent.parent
-    return base_dir / "DeepLearningModels" / "plant_disease_model_final.pth"
+    """Return the local cached path to the pretrained plant disease model from Hugging Face Hub."""
+    local_path_str = hf_hub_download(
+        repo_id=HF_REPO_ID,
+        filename=PLANT_DISEASE_MODEL_FILENAME,
+    )
+    return Path(local_path_str)
 
 
 def load_model() -> torch.nn.Module:
