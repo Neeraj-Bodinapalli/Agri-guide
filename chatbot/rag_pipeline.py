@@ -1,12 +1,13 @@
 import os
 from dotenv import load_dotenv
+from huggingface_hub import hf_hub_download
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 
 load_dotenv()
 
-VECTOR_DB_DIR = "vector_db"
-_vectorstore  = None
+VECTOR_DB_REPO_ID = "neerajbodinapalli/agri-guide-vector-db"
+_vectorstore       = None
 
 
 def get_vectorstore():
@@ -18,10 +19,22 @@ def get_vectorstore():
             model_kwargs  = {"device": "cpu"},
             encode_kwargs = {"normalize_embeddings": True}
         )
+
+        # Download FAISS index and metadata from Hugging Face Hub
+        index_path = hf_hub_download(
+            repo_id=VECTOR_DB_REPO_ID,
+            filename="index.faiss",
+        )
+        metadata_path = hf_hub_download(
+            repo_id=VECTOR_DB_REPO_ID,
+            filename="metadata.json",
+        )
+
+        # Load vectorstore from local files
         _vectorstore = FAISS.load_local(
-            VECTOR_DB_DIR,
+            os.path.dirname(index_path),
             embeddings,
-            allow_dangerous_deserialization=True
+            allow_dangerous_deserialization=True,
         )
         print("Vector database loaded.")
     return _vectorstore
