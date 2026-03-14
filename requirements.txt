@@ -26,3 +26,5 @@ langchain-google-genai>=2.0.0
 sentence-transformers
 
 huggingface_hub
+
+openai
