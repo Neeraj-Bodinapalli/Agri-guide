@@ -1,266 +1,239 @@
-# 🌾 Agri-Guide: Intelligent Precision Farming Suite
+#  Agri-Guide: AI-Powered Precision Farming Suite (ML + DL + RAG Chatbot)
 
-An AI-powered agricultural intelligence platform that leverages Machine Learning to provide intelligent crop recommendations, accurate yield predictions, and personalized fertilizer recommendations for optimal farming outcomes.
+Agri-Guide is an agricultural intelligence platform that combines **traditional ML**, **deep learning**, and a **RAG (Retrieval-Augmented Generation) chatbot** to help farmers make better decisions across crop planning, yield estimation, soil health, and disease management.
 
-## Website link : https://agri-guide-2.onrender.com  
+##  Live Demo
 
-## 📋 Project Description / Overview
+- **Website**: `https://agri-guide-2.onrender.com`
 
-Agri-Guide is a comprehensive precision farming solution that combines traditional agricultural knowledge with modern machine learning techniques. The system analyzes soil parameters, climate conditions, and crop characteristics to provide farmers with data-driven insights for maximizing productivity and sustainability. Built with a modular architecture, it offers three core prediction modules accessible through an intuitive web interface.
+## Features
 
-## ✨ Key Features
+-  **Crop Recommendation (ML)**: Suggests best crop using NPK + climate + pH with confidence score
+-  **Yield Prediction (ML)**: Predicts yield per hectare and total yield (based on location/season/crop/area)
+-  **Soil Health & Fertilizer Recommendation (ML)**: Predicts fertilizer and provides soil advice
+-  **Leaf Disease Detection (Deep Learning)**: Upload/scan leaf images to detect diseases (EfficientNet) + treatment tips
+-  **Agri-Guide Assistant (RAG Chatbot)**:
+  - Embedded chat widget across the site
+  - Uses **FAISS vector DB** built from `knowledge_base/` (PDFs) + project CSVs
+  - Calls **OpenRouter** (Gemma model) and returns answers + sources when available
 
-- 🌱 **Smart Crop Recommendation** - AI-powered crop suggestions based on soil NPK levels, climate, and pH
-- 📊 **Yield Prediction** - Accurate crop yield forecasting with revenue estimation capabilities
-- 🧪 **Soil Health Analysis** - Comprehensive fertilizer recommendations with soil health insights
-- 🎨 **Modern Web Interface** - Responsive, professional UI with real-time predictions
-- 🔄 **Integrated Workflow** - Seamless navigation between modules with data pre-population
-- 💡 **Actionable Insights** - Detailed soil health advice and fertilizer application guidelines
-- 🔗 **Cross-Module Integration** - Automatic data transfer between crop, yield, and soil health modules
+##  Tech Stack
 
-## 🛠️ Technologies Used
+- **Backend**: Python, Flask, Jinja2
+- **ML**: scikit-learn, pandas, numpy (Random Forest models + encoders)
+- **Deep Learning**: PyTorch, torchvision, Pillow (image disease detection)
+- **RAG / Vector Search**: LangChain, FAISS (`faiss-cpu`), Sentence Transformers (`all-MiniLM-L6-v2`), PyPDF
+- **Deployment**: Gunicorn, Render (`render.yaml`), startup script (`startup.sh`)
 
-### Programming Languages
-- **Python 3.8+** - Core ML and web application logic
-- **HTML5/CSS3** - Modern, responsive web interface
-- **JavaScript (ES6+)** - Interactive frontend functionality
-
-### Machine Learning & Data Science
-- **scikit-learn** - Random Forest models for classification and regression
-- **pandas** - Data processing and feature engineering
-- **numpy** - Numerical computations and array operations
-- **pickle/joblib** - Model serialization and persistence
-
-### Web Framework
-- **Flask** - Lightweight web application framework
-- **Jinja2** - Template engine for dynamic HTML rendering
-
-### Frontend
-- **Font Awesome** - Icon library for enhanced UI
-- **Google Fonts (Inter)** - Modern typography
-- **Custom CSS** - Professional agrarian tech theme
-
-## 📁 Project Structure
+##  Updated Project Structure 
 
 ```
-agri-guide/
+.
+├── web_app.py                      # Flask app: UI routes + ML/DL/RAG APIs
+├── app.py                          # Training entry point (runs training pipeline)
+├── requirements.txt
+├── startup.sh                      # Deploy: trains models if missing, then starts Gunicorn
+├── render.yaml                     # Render deployment config
+├── Procfile                        # Procfile for platforms using it
 │
-├── app.py                           # Training pipeline entry point
-├── web_app.py                       # Flask web application
-├── requirements.txt                 # Python dependencies
+├── agri_guide/                     # Training pipeline package
+│   ├── components/                 # Data ingestion/transformation + trainers
+│   └── pipeline/training_pipeline.py
 │
-├── Core Application Files
-│   ├── agri_guide/                  # Main package
-│   │   ├── components/              # ML components
-│   │   │   ├── data_ingestion.py   # Dataset loading
-│   │   │   ├── data_transformation.py  # Feature engineering
-│   │   │   ├── model_trainer.py    # Crop & yield model training
-│   │   │   └── fertilizer_trainer.py   # Fertilizer model training
-│   │   ├── entity/                  # Configuration entities
-│   │   │   ├── config_entity.py    # Training configurations
-│   │   │   └── artifact_entity.py  # Model artifacts
-│   │   ├── pipeline/                # Training orchestration
-│   │   │   └── training_pipeline.py
-│   │   ├── logging/                 # Logging utilities
-│   │   ├── exception/               # Error handling
-│   │   └── utils/                   # Helper functions
+├── templates/                      # UI templates
+│   ├── home.html
+│   ├── crop_recommendation.html
+│   ├── yield_prediction.html
+│   ├── soil_health.html
+│   └── disease_detection.html
 │
-├── Web Application
-│   ├── templates/                   # HTML templates
-│   │   ├── base.html               # Base template with navigation
-│   │   ├── home.html               # Landing page
-│   │   ├── crop_recommendation.html
-│   │   ├── yield_prediction.html
-│   │   └── soil_health.html
-│   └── static/                      # Static assets
-│       ├── css/
-│       │   └── style.css           # Main stylesheet
-│       └── js/
-│           ├── main.js             # Common JavaScript
-│           ├── crop_recommendation.js
-│           ├── yield_prediction.js
-│           └── soil_health.js
+├── static/
+│   ├── css/style.css
+│   └── js/
+│       ├── chatbot.js              # Chat widget frontend
+│       ├── disease_detection.js
+│       ├── crop_recommendation.js
+│       ├── yield_prediction.js
+│       ├── soil_health.js
+│       └── main.js
 │
-├── Machine Learning Models
-│   └── final_model/                 # Trained models
-│       ├── crop_recommendation_model.pkl
-│       ├── label_encoder.pkl
-│       ├── scaler.pkl
-│       ├── yield_model.pkl
-│       ├── yield_scaler.pkl
-│       ├── yield_feature_columns.pkl
-│       ├── fertilizer_model.pkl
-│       ├── soil_encoder.pkl
-│       ├── crop_encoder.pkl
-│       └── fertilizer_encoder.pkl
+├── final_model/                    # Trained ML artifacts (created by training)
+│   ├── crop_recommendation_model.pkl
+│   ├── label_encoder.pkl
+│   ├── yield_model.pkl
+│   ├── yield_scaler.pkl
+│   ├── yield_feature_columns.pkl
+│   ├── yield_state_encoder.pkl
+│   ├── yield_season_encoder.pkl
+│   ├── yield_crop_encoder.pkl
+│   ├── fertilizer_model.pkl
+│   ├── soil_encoder.pkl
+│   ├── crop_encoder.pkl
+│   └── fertilizer_encoder.pkl
 │
-└── Datasets
-    ├── raw_data/                    # Raw training data
-    │   ├── Crop_recommendation.csv
-    │   └── crop_production.csv
-    └── Fertilizer_Prediction.csv
+├── DeepLearningModels/
+│   └── plant_disease_model.pth     # Pretrained disease model (required)
+│
+├── deep_learning/
+│   ├── disease_predictor.py        # Loads EfficientNet + runs inference
+│   └── class_labels.py
+│
+├── chatbot/
+│   ├── chat_service.py             # OpenRouter chat + history + guardrails
+│   ├── rag_pipeline.py             # FAISS retrieval (loads on first request)
+│   ├── build_vector_db.py          # Build vector_db/ from PDFs + CSVs
+│   └── prompt_template.py
+│
+├── knowledge_base/
+│   └── plant_disease_management_protocol.pdf
+│
+├── vector_db/                      # FAISS index + metadata (used by RAG)
+│   └── metadata.json
+│
+└── raw_data/
+    ├── Crop_recommendation.csv
+    └── crop_production.csv
 ```
 
-## 🔧 Installation Instructions
+##  Installation (Local)
 
 ### Prerequisites
-- Python 3.8 or higher
-- pip (Python package manager)
-- Virtual environment (recommended)
 
-### Step 1: Clone the Repository
-```bash
-git clone <repository-url>
-cd agri-guide
-```
+- Python **3.9+** recommended (Render config uses 3.9.16)
 
-### Step 2: Create Virtual Environment (Recommended)
+### Setup
+
 ```bash
 python -m venv venv
 
-# On Windows
+# Windows
 venv\Scripts\activate
 
-# On macOS/Linux
+# macOS/Linux
 source venv/bin/activate
-```
 
-### Step 3: Install Dependencies
-```bash
 pip install -r requirements.txt
 ```
 
-### Step 4: Verify Dataset Placement
-Ensure the following datasets are in place:
-- `raw_data/Crop_recommendation.csv`
-- `raw_data/crop_production.csv`
-- `Fertilizer_Prediction.csv`
+##  Environment Variables
 
-## 🚀 Usage Guide
+Create a `.env` file in the project root (or set env vars in your OS/deployment):
 
-### Option 1: Run Web Application (Recommended)
+```env
+# Required for the chatbot (OpenRouter)
+OPENROUTER_API_KEY=your_key_here
 
-If models are already trained, launch the web interface directly:
+# Optional (only used by chatbot/check_models.py)
+GOOGLE_API_KEY=your_key_here
+```
+
+##  Required Assets (Important)
+
+- **Deep learning disease model**: place the file here:
+  - `DeepLearningModels/plant_disease_model.pth`
+- **ML model `.pkl` files**:
+  - Either **train locally** via `python app.py`, or let deployment auto-train using `startup.sh`
+
+## 🚀 Run the Application
+
+### Option A: Run the Web App (recommended)
 
 ```bash
 python web_app.py
 ```
 
-The application will start on `http://localhost:5000`
-
-Access the interface:
+Open:
 - **Home**: `http://localhost:5000/`
 - **Crop Recommendation**: `http://localhost:5000/crop-recommendation`
 - **Yield Prediction**: `http://localhost:5000/yield-prediction`
 - **Soil Health**: `http://localhost:5000/soil-health`
+- **Disease Detection**: `http://localhost:5000/disease-detection`
 
-### Option 2: Train Models First
-
-If you need to train or retrain the ML models:
+### Option B: Train / Retrain ML Models
 
 ```bash
 python app.py
 ```
 
-This will:
-1. Load datasets from `raw_data/` and root directory
-2. Train all three ML models (Crop, Yield, Fertilizer)
-3. Save trained models to `final_model/` directory
-4. Display training metrics and accuracy scores
+This runs the training pipeline (`agri_guide/pipeline/training_pipeline.py`) and writes artifacts into `final_model/`.
 
-Then launch the web application:
+##  RAG Chatbot (Vector DB)
+
+The chatbot retrieves answers from a local FAISS vector database in `vector_db/`.
+
+### Build / Rebuild the Vector DB
+
 ```bash
-python web_app.py
+python chatbot/build_vector_db.py
 ```
 
-### Using the Web Interface
+Sources used:
+- PDFs in `knowledge_base/`
+- CSVs: `raw_data/Crop_recommendation.csv`, `Fertilizer_Prediction.csv` (as configured in `chatbot/build_vector_db.py`)
 
-#### 1. Crop Recommendation
-1. Navigate to **Crop Recommendation** page
-2. Enter soil parameters (N, P, K, pH)
-3. Enter climate data (Temperature, Humidity, Rainfall)
-4. Click **"Analyze & Recommend"**
-5. View recommended crop with confidence score
-6. Optional: Click **"Predict Yield"** or **"Get Soil Health Analysis"**
+##  API Endpoints (Backend)
 
-#### 2. Yield Prediction
-1. Navigate to **Yield Prediction** page
-2. Select State, Season, and Crop
-3. Enter cultivation area (hectares)
-4. Click **"Predict Yield"**
-5. View yield per hectare and total yield
-6. Use revenue calculator for profit estimation
+- **Health**: `GET /api/health`
+- **Crop prediction**: `POST /api/predict-crop`
+- **Yield prediction**: `POST /api/predict-yield`
+- **Fertilizer prediction**: `POST /api/predict-fertilizer`
+- **Disease prediction**: `POST /api/predict-disease` (multipart form-data with `image`)
+- **Chatbot**: `POST /api/chat` (JSON: `message`, `session_id`, optional `context`)
 
-#### 3. Soil Health & Fertilizers
-1. Navigate to **Soil Health** page
-2. Enter NPK values and environmental parameters
-3. Select Crop Type and Soil Type
-4. Enter Soil Moisture percentage
-5. Click **"Analyze & Recommend"**
-6. View fertilizer recommendation with confidence score
-7. Review soil health analysis and application guidelines
-
-## 🏗️ Architecture / How It Works
-
-### System Pipeline
+##  System Flowchart (End-to-End)
 
 ```
-┌─────────────────┐
-│   Raw Datasets  │
-│  (CSV Files)    │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────────┐
-│  Data Ingestion     │  Load and validate data
-│  (data_ingestion.py)│
-└────────┬────────────┘
-         │
-         ▼
-┌──────────────────────────┐
-│  Data Transformation     │  Feature engineering:
-│  (data_transformation.py)│  - NPK feature creation
-└────────┬─────────────────┘  - One-hot encoding
-         │                    - Scaling
-         ▼
-┌──────────────────────────┐
-│  Model Training          │  Train 3 RF models:
-│  (model_trainer.py,      │  - Crop (100% accuracy)
-│   fertilizer_trainer.py) │  - Yield (R² score)
-└────────┬─────────────────┘  - Fertilizer (100% accuracy)
-         │
-         ▼
-┌──────────────────────────┐
-│  Model Persistence       │  Save to final_model/
-│  (pickle serialization)  │
-└────────┬─────────────────┘
-         │
-         ▼
-┌──────────────────────────┐
-│  Flask Web Application   │  Load models at startup
-│  (web_app.py)            │
-└────────┬─────────────────┘
-         │
-         ▼
-┌──────────────────────────┐
-│  User Interface          │  Interactive web forms
-│  (HTML/CSS/JS)           │  with real-time validation
-└────────┬─────────────────┘
-         │
-         ▼
-┌──────────────────────────┐
-│  API Endpoints           │  RESTful prediction APIs:
-│  (/api/predict-*)        │  - /api/predict-crop
-└────────┬─────────────────┘  - /api/predict-yield
-         │                    - /api/predict-fertilizer
-         ▼
-┌──────────────────────────┐
-│  ML Prediction           │  Real-time inference
-│  (Random Forest models)  │  with confidence scores
-└────────┬─────────────────┘
-         │
-         ▼
-┌──────────────────────────┐
-│  Results Visualization   │  Side-by-side display
-│  (Dynamic UI updates)    │  Statistics & insights
-└──────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                                  DATA / ASSETS                               │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ ML Datasets: raw_data/Crop_recommendation.csv, raw_data/crop_production.csv  │
+│            Fertilizer_Prediction.csv                                         │
+│ DL Model:   DeepLearningModels/plant_disease_model.pth                       │
+│ RAG Docs:   knowledge_base/*.pdf  (+ CSV sentences during build)             │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+        ┌──────────────────────────────────────────────────────────────┐
+        │                           (1) ML                              │
+        └──────────────────────────────────────────────────────────────┘
+┌───────────────────────────────┐                ┌──────────────────────────────┐
+│ app.py                         │                │ final_model/                  │
+│ agri_guide training pipeline    │ ───────────▶   │ *.pkl models + encoders       │
+│ - crop recommendation           │                │ (crop, yield, fertilizer)     │
+│ - yield prediction              │                └──────────────────────────────┘
+│ - fertilizer prediction         │
+└───────────────────────────────┘
+
+        ┌──────────────────────────────────────────────────────────────┐
+        │                           (2) DL                              │
+        └──────────────────────────────────────────────────────────────┘
+┌───────────────────────────────┐                ┌──────────────────────────────┐
+│ deep_learning/disease_predictor│                │ /api/predict-disease          │
+│ - load EfficientNet + .pth     │ ───────────▶   │ image → preprocess → predict  │
+│ - leafiness check (guardrail)  │                │ disease + confidence + advice │
+└───────────────────────────────┘                └──────────────────────────────┘
+
+        ┌──────────────────────────────────────────────────────────────┐
+        │                           (3) RAG                             │
+        └──────────────────────────────────────────────────────────────┘
+┌───────────────────────────────┐                ┌──────────────────────────────┐
+│ chatbot/build_vector_db.py     │                │ vector_db/ (FAISS index)      │
+│ PDFs + CSV sentences → chunks  │ ───────────▶   │ loaded on first chat request  │
+│ embeddings (MiniLM) → FAISS    │                └──────────────────────────────┘
+└───────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                           Flask Web App (web_app.py)                          │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ UI: /, /crop-recommendation, /yield-prediction, /soil-health, /disease-detection│
+│ APIs: /api/predict-crop, /api/predict-yield, /api/predict-fertilizer,          │
+│      /api/predict-disease, /api/chat                                           │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌───────────────────────────────┐                ┌──────────────────────────────┐
+│ Frontend forms + results       │                │ Chat widget (static/js/chatbot.js)│
+│ templates/ + static/js         │                │ /api/chat + optional context  │
+└───────────────────────────────┘                └──────────────────────────────┘
+```
+
+
+
