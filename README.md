@@ -180,4 +180,60 @@ Sources used:
 - **Disease prediction**: `POST /api/predict-disease` (multipart form-data with `image`)
 - **Chatbot**: `POST /api/chat` (JSON: `message`, `session_id`, optional `context`)
 
+##  System Flowchart (End-to-End)
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                                  DATA / ASSETS                               │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ ML Datasets: raw_data/Crop_recommendation.csv, raw_data/crop_production.csv  │
+│            Fertilizer_Prediction.csv                                         │
+│ DL Model:   DeepLearningModels/plant_disease_model.pth                       │
+│ RAG Docs:   knowledge_base/*.pdf  (+ CSV sentences during build)             │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+        ┌──────────────────────────────────────────────────────────────┐
+        │                           (1) ML                              │
+        └──────────────────────────────────────────────────────────────┘
+┌───────────────────────────────┐                ┌──────────────────────────────┐
+│ app.py                         │                │ final_model/                  │
+│ agri_guide training pipeline    │ ───────────▶   │ *.pkl models + encoders       │
+│ - crop recommendation           │                │ (crop, yield, fertilizer)     │
+│ - yield prediction              │                └──────────────────────────────┘
+│ - fertilizer prediction         │
+└───────────────────────────────┘
+
+        ┌──────────────────────────────────────────────────────────────┐
+        │                           (2) DL                              │
+        └──────────────────────────────────────────────────────────────┘
+┌───────────────────────────────┐                ┌──────────────────────────────┐
+│ deep_learning/disease_predictor│                │ /api/predict-disease          │
+│ - load EfficientNet + .pth     │ ───────────▶   │ image → preprocess → predict  │
+│ - leafiness check (guardrail)  │                │ disease + confidence + advice │
+└───────────────────────────────┘                └──────────────────────────────┘
+
+        ┌──────────────────────────────────────────────────────────────┐
+        │                           (3) RAG                             │
+        └──────────────────────────────────────────────────────────────┘
+┌───────────────────────────────┐                ┌──────────────────────────────┐
+│ chatbot/build_vector_db.py     │                │ vector_db/ (FAISS index)      │
+│ PDFs + CSV sentences → chunks  │ ───────────▶   │ loaded on first chat request  │
+│ embeddings (MiniLM) → FAISS    │                └──────────────────────────────┘
+└───────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                           Flask Web App (web_app.py)                          │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ UI: /, /crop-recommendation, /yield-prediction, /soil-health, /disease-detection│
+│ APIs: /api/predict-crop, /api/predict-yield, /api/predict-fertilizer,          │
+│      /api/predict-disease, /api/chat                                           │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌───────────────────────────────┐                ┌──────────────────────────────┐
+│ Frontend forms + results       │                │ Chat widget (static/js/chatbot.js)│
+│ templates/ + static/js         │                │ /api/chat + optional context  │
+└───────────────────────────────┘                └──────────────────────────────┘
+```
+
+
 
