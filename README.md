@@ -4,7 +4,7 @@ Agri-Guide is an agricultural intelligence platform that combines **traditional 
 
 ##  Live Demo
 
-- **Website**: `https://agri-guide-2.onrender.com`
+- **Website**: `https://neerajbodinapalli-agri-guide-4671b0a.hf.space`
 
 ## Features
 
