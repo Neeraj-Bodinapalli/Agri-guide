@@ -25,7 +25,7 @@ Agri-Guide is an agricultural intelligence platform that combines **traditional 
 - **RAG / Vector Search**: LangChain, FAISS (`faiss-cpu`), Sentence Transformers (`all-MiniLM-L6-v2`), PyPDF
 - **Deployment**: Gunicorn, Render (`render.yaml`), startup script (`startup.sh`)
 
-##  Updated Project Structure (High-Level)
+##  Updated Project Structure 
 
 ```
 .
